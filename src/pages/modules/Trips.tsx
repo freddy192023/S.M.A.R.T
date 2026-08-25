@@ -1,8 +1,22 @@
-import React from 'react';
-import { MOCK_DATA } from '../../mockData';
+import React, { useState, useEffect } from 'react';
+import { tripService } from '../../services/tripService';
 import { StatusBadge, ProcessFlow } from '../../components/Common';
 
 export const Trips: React.FC = () => {
+  const [trips, setTrips] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    tripService.getAllWithDetails()
+      .then(data => setTrips(data || []))
+      .catch(err => console.error('Error cargando viajes:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="content-card" style={{ textAlign: 'center', padding: '4rem' }}><p style={{ color: 'var(--text-muted)' }}>⏳ Cargando programación de viajes...</p></div>;
+  }
+
   return (
     <div className="content-card">
       <div className="card-header">
@@ -12,7 +26,7 @@ export const Trips: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Funcionalidad Programar Viaje - Disponible en la siguiente etapa.')}
+          onClick={() => alert('Funcionalidad Programar Viaje - Próximamente.')}
         >
           + Programar Viaje
         </button>
@@ -34,26 +48,30 @@ export const Trips: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {MOCK_DATA.trips.map((t, idx) => (
-              <tr key={idx}>
-                <td className="text-bold">{t.route}</td>
-                <td>{t.bus}</td>
-                <td>{t.conductor}</td>
-                <td>{t.date}</td>
-                <td>{t.time}</td>
-                <td><StatusBadge status={t.status} /></td>
-                <td>
-                  <div className="action-buttons">
-                    <button 
-                      className="btn btn-primary btn-sm" 
-                      onClick={() => alert(`Detalle operacional para viaje en ${t.route}`)}
-                    >
-                      Ver Control
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {trips.length === 0 ? (
+              <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No hay viajes programados.</td></tr>
+            ) : (
+              trips.map((t, idx) => (
+                <tr key={idx}>
+                  <td className="text-bold">{t.route}</td>
+                  <td>{t.bus}</td>
+                  <td>{t.conductor}</td>
+                  <td>{t.date}</td>
+                  <td>{t.time}</td>
+                  <td><StatusBadge status={t.status} /></td>
+                  <td>
+                    <div className="action-buttons">
+                      <button 
+                        className="btn btn-primary btn-sm" 
+                        onClick={() => alert(`Detalle operacional para viaje en ${t.route}`)}
+                      >
+                        Ver Control
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

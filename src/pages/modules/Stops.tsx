@@ -1,7 +1,21 @@
-import React from 'react';
-import { MOCK_DATA } from '../../mockData';
+import React, { useState, useEffect } from 'react';
+import { stopService } from '../../services/stopService';
 
 export const Stops: React.FC = () => {
+  const [stops, setStops] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    stopService.getAll()
+      .then(data => setStops(data || []))
+      .catch(err => console.error('Error cargando paraderos:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="content-card" style={{ textAlign: 'center', padding: '4rem' }}><p style={{ color: 'var(--text-muted)' }}>⏳ Cargando paraderos...</p></div>;
+  }
+
   return (
     <div className="content-card">
       <div className="card-header">
@@ -11,7 +25,7 @@ export const Stops: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Funcionalidad Crear Parada - Disponible en la siguiente etapa.')}
+          onClick={() => alert('Funcionalidad Crear Parada - Próximamente.')}
         >
           + Agregar Parada
         </button>
@@ -20,27 +34,31 @@ export const Stops: React.FC = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Código</th>
               <th>Nombre</th>
-              <th>Dirección / Geolocalización</th>
-              <th>Tipo de Paradero</th>
+              <th>Dirección</th>
+              <th>Ruta Asociada</th>
+              <th>Orden</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {MOCK_DATA.stops.map(p => (
-              <tr key={p.code}>
-                <td className="text-bold">{p.code}</td>
-                <td>{p.name}</td>
-                <td>{p.address}</td>
-                <td><span className="stop-type">{p.type}</span></td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="btn-icon" title="Editar" onClick={() => alert(`Editar ${p.code}`)}>✏️</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {stops.length === 0 ? (
+              <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No hay paraderos registrados.</td></tr>
+            ) : (
+              stops.map(p => (
+                <tr key={p.id}>
+                  <td className="text-bold">{p.name}</td>
+                  <td>{p.address || 'Sin dirección'}</td>
+                  <td>{p.routes?.name || 'Sin ruta'}</td>
+                  <td>{p.stop_order}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="btn-icon" title="Editar" onClick={() => alert(`Editar ${p.name}`)}>✏️</button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
