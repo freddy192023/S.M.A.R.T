@@ -1,29 +1,37 @@
 import React, { useState } from 'react';
-import { MOCK_DATA } from '../mockData';
-import type { User } from '../types';
+import { supabase } from '../lib/supabaseClient';
 
 interface LoginProps {
   setActiveView: (view: string) => void;
-  setCurrentUser: (user: User | null) => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ setActiveView, setCurrentUser }) => {
-  const [email, setEmail] = useState('admin@smart.com');
-  const [password, setPassword] = useState('admin123');
+export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const matchedUser = MOCK_DATA.users.find(
-      u => u.email.toLowerCase() === email.toLowerCase()
-    );
+    setLoading(true);
+    setErrorMessage(null);
 
-    if (matchedUser) {
-      setCurrentUser(matchedUser);
-      sessionStorage.setItem('smart_user', JSON.stringify(matchedUser));
-      setActiveView('dashboard');
-    } else {
-      alert("Usuario no registrado. Favor utilizar las credenciales indicadas.");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+      } else {
+        setActiveView('dashboard');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Ocurrió un error inesperado al iniciar sesión.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,16 +43,30 @@ export const Login: React.FC<LoginProps> = ({ setActiveView, setCurrentUser }) =
           <p>Plataforma de Control de Transporte</p>
         </div>
         <form onSubmit={handleSubmit}>
+          {errorMessage && (
+            <div style={{ 
+              marginBottom: '1rem', 
+              padding: '0.8rem', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              border: '1px solid rgba(239, 68, 68, 0.3)', 
+              borderRadius: '8px', 
+              color: 'var(--danger-color)', 
+              fontSize: '0.85rem' 
+            }}>
+              ⚠️ {errorMessage}
+            </div>
+          )}
           <div className="form-group">
-            <label className="form-label" htmlFor="login-email">Correo Electrónico o Usuario</label>
+            <label className="form-label" htmlFor="login-email">Correo Electrónico</label>
             <input 
               type="email" 
               id="login-email" 
               className="form-input" 
-              placeholder="ejemplo@smart.com" 
+              placeholder="correo@ejemplo.com" 
               required 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="form-group">
@@ -58,11 +80,13 @@ export const Login: React.FC<LoginProps> = ({ setActiveView, setCurrentUser }) =
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
               <button 
                 type="button" 
                 className="password-toggle" 
                 onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
               >
                 👁️
               </button>
@@ -77,24 +101,21 @@ export const Login: React.FC<LoginProps> = ({ setActiveView, setCurrentUser }) =
               className="forgot-password" 
               onClick={(e) => {
                 e.preventDefault();
-                alert('Restablecer contraseña - Enlace enviado al correo electrónico mock.');
+                alert('Funcionalidad de recuperación de contraseña habilitada vía consola de Supabase Auth.');
               }}
             >
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Iniciar Sesión</button>
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{ width: '100%' }}
+            disabled={loading}
+          >
+            {loading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
+          </button>
         </form>
-        
-        <div style={{ marginTop: '1.5rem', padding: '0.8rem', background: 'rgba(0,210,196,0.05)', border: '1px solid rgba(0,210,196,0.15)', borderRadius: '8px', fontSize: '0.8rem' }}>
-          <p style={{ fontWeight: 700, color: 'var(--accent-color)', marginBottom: '0.2rem' }}>Credenciales de prueba:</p>
-          <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-            <li>🔑 Admin: <strong>admin@smart.com</strong> / admin123</li>
-            <li>🔑 Operador: <strong>operator@smart.com</strong> / operator123</li>
-            <li>🔑 Conductor: <strong>driver@smart.com</strong> / driver123</li>
-            <li>🔑 Pasajero: <strong>user@smart.com</strong> / user123</li>
-          </ul>
-        </div>
 
         <div className="back-to-home">
           <a href="#home" onClick={(e) => { e.preventDefault(); setActiveView('home'); }}>← Volver al inicio</a>

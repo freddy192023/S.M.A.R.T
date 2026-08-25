@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { User } from './types';
+import { useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 
@@ -23,16 +23,11 @@ import { Reports } from './pages/modules/Reports';
 
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<string>('home');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { user, profile, loading, signOut } = useAuth();
 
-  // Sync state from hash and sessionStorage
+  // Sync state from hash
   useEffect(() => {
-    const savedUser = sessionStorage.getItem('smart_user');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') || 'home';
       setActiveView(hash);
@@ -52,27 +47,9 @@ export const App: React.FC = () => {
     window.location.hash = `#${view}`;
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    sessionStorage.removeItem('smart_user');
+  const handleLogout = async () => {
+    await signOut();
     changeView('home');
-  };
-
-  const simulateRoleChange = (newRole: User['role']) => {
-    if (!currentUser) return;
-    
-    let matchedName = "Carlos Administrador";
-    if (newRole === 'Operador') matchedName = "Laura Operadora";
-    else if (newRole === 'Conductor') matchedName = "Juan Pérez";
-    else if (newRole === 'Pasajero') matchedName = "María González";
-
-    const updatedUser: User = {
-      ...currentUser,
-      role: newRole,
-      name: matchedName
-    };
-    setCurrentUser(updatedUser);
-    sessionStorage.setItem('smart_user', JSON.stringify(updatedUser));
   };
 
   // Views classifications
@@ -81,10 +58,14 @@ export const App: React.FC = () => {
 
   // Auth Guard
   useEffect(() => {
-    if (!isPublic && !currentUser) {
-      changeView('login');
+    if (!loading) {
+      if (!isPublic && !user) {
+        changeView('login');
+      } else if (activeView === 'login' && user) {
+        changeView('dashboard');
+      }
     }
-  }, [activeView, currentUser, isPublic]);
+  }, [activeView, user, isPublic, loading]);
 
   // Page titles lookup
   const viewTitles: Record<string, string> = {
@@ -120,7 +101,7 @@ export const App: React.FC = () => {
       case 'reports':
         return <Reports />;
       case 'profile':
-        if (currentUser) return <Profile currentUser={currentUser} />;
+        if (profile) return <Profile currentUser={profile} />;
         return null;
       default:
         // Módulo en desarrollo fallback
@@ -128,7 +109,7 @@ export const App: React.FC = () => {
           <div className="fallback-view">
             <span className="fallback-icon">🛠️</span>
             <h2>Módulo en Desarrollo</h2>
-            <p>La vista seleccionada se encuentra actualmente en fase de prototipado inicial. Los controles CRUD y enlaces persistentes se habilitarán en la siguiente etapa del proyecto.</p>
+            <p>La vista seleccionada se encuentra actualmente en fase de prototipado inicial. Los controles CRUD y enlaces de Supabase se habilitarán en la siguiente etapa del proyecto.</p>
             <button className="btn btn-primary" onClick={() => changeView('dashboard')}>
               Volver al Dashboard
             </button>
@@ -137,6 +118,38 @@ export const App: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'radial-gradient(circle at 50% 50%, var(--bg-secondary) 0%, var(--bg-primary) 100%)',
+        color: '#ffffff',
+        fontFamily: 'var(--font-sans)'
+      }}>
+        <div style={{
+          border: '4px solid rgba(0, 210, 196, 0.1)',
+          borderLeftColor: 'var(--accent-color)',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '1.5rem'
+        }}></div>
+        <p style={{ letterSpacing: '2px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>INICIANDO S.M.A.R.T...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   if (isPublic) {
     return (
       <>
@@ -144,22 +157,22 @@ export const App: React.FC = () => {
         <Header 
           activeView={activeView} 
           setActiveView={changeView} 
-          currentUser={currentUser} 
+          currentUser={profile} 
         />
         
         <main style={{ marginTop: 'var(--header-height)' }}>
-          {activeView === 'home' && <Home setActiveView={changeView} currentUser={currentUser} />}
+          {activeView === 'home' && <Home setActiveView={changeView} currentUser={profile} />}
           {activeView === 'about' && <About />}
           {activeView === 'how-it-works' && <HowItWorks />}
           {activeView === 'routes' && <RoutesPage />}
-          {activeView === 'login' && <Login setActiveView={changeView} setCurrentUser={setCurrentUser} />}
+          {activeView === 'login' && <Login setActiveView={changeView} />}
         </main>
 
         <footer className="public-footer">
           <div className="public-footer-brand">S.M.A.R.T<span>.</span></div>
           <p>Smart Mobility & Administration Resource Technology - Plataforma Inteligente de Gestión de Transporte.</p>
           <p style={{ fontSize: '0.75rem', marginTop: '1rem', color: 'var(--text-muted)' }}>
-            © 2026 Asignatura Técnicas de Calidad de Software. Primera Etapa de Presentación React TS.
+            © 2026 Asignatura Técnicas de Calidad de Software. Conectado a Supabase en Tiempo Real.
           </p>
         </footer>
       </>
@@ -167,14 +180,14 @@ export const App: React.FC = () => {
   }
 
   // Private view rendering wrapper
-  if (!currentUser) return null;
+  if (!profile) return null;
 
   return (
     <div className={`dashboard-wrapper ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar 
         activeView={activeView} 
         setActiveView={changeView} 
-        currentUser={currentUser} 
+        currentUser={profile} 
       />
 
       <div className="main-content" style={{ marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)' }}>
@@ -185,26 +198,11 @@ export const App: React.FC = () => {
           </div>
 
           <div className="topbar-right">
-            {/* Simulated RBAC selector */}
-            <div className="role-tester">
-              <span className="role-tester-label">Simular Rol:</span>
-              <select 
-                className="role-select" 
-                value={currentUser.role}
-                onChange={(e) => simulateRoleChange(e.target.value as User['role'])}
-              >
-                <option value="Administrador">Administrador</option>
-                <option value="Operador">Operador</option>
-                <option value="Conductor">Conductor</option>
-                <option value="Pasajero">Pasajero/Usuario</option>
-              </select>
-            </div>
-
             <div className="user-profile-menu" onClick={() => changeView('profile')}>
-              <div className="user-avatar">{currentUser.name.charAt(0)}</div>
+              <div className="user-avatar">{profile.name.charAt(0)}</div>
               <div className="user-info">
-                <span className="user-name">{currentUser.name}</span>
-                <span className="user-role">{currentUser.role}</span>
+                <span className="user-name">{profile.name}</span>
+                <span className="user-role">{profile.role}</span>
               </div>
             </div>
 
