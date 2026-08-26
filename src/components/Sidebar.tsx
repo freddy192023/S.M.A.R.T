@@ -11,16 +11,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
   const role = currentUser.role;
 
   const menuItems = [
-    { key: 'dashboard', label: 'Dashboard', icon: '🏠', roles: ['Administrador', 'Operador', 'Conductor', 'Pasajero'] },
-    { key: 'users', label: 'Usuarios', icon: '👥', roles: ['Administrador'] },
-    { key: 'roles', label: 'Roles y Permisos', icon: '🔐', roles: ['Administrador'] },
-    { key: 'buses', label: 'Buses', icon: '🚌', roles: ['Administrador', 'Operador'] },
-    { key: 'drivers', label: 'Conductores', icon: '👨‍✈️', roles: ['Administrador', 'Operador'] },
-    { key: 'routes-admin', label: 'Rutas', icon: '🗺️', roles: ['Administrador', 'Operador', 'Conductor', 'Pasajero'] },
-    { key: 'stops', label: 'Paraderos', icon: '📍', roles: ['Administrador', 'Operador', 'Conductor'] },
-    { key: 'trips', label: 'Viajes', icon: '🚍', roles: ['Administrador', 'Operador', 'Conductor', 'Pasajero'] },
-    { key: 'reports', label: 'Reportes', icon: '📊', roles: ['Administrador', 'Operador'] },
-    { key: 'profile', label: 'Mi Perfil', icon: '👤', roles: ['Administrador', 'Operador', 'Conductor', 'Pasajero'] }
+    { key: 'dashboard', label: 'Dashboard', icon: '🏠', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
+    { key: 'users', label: 'Usuarios', icon: '👥', roles: ['admin'] },
+    { key: 'roles', label: 'Roles y Permisos', icon: '🔐', roles: ['admin'] },
+    { key: 'buses', label: 'Buses', icon: '🚌', roles: ['admin', 'operador'] },
+    { key: 'drivers', label: 'Conductores', icon: '👨‍✈️', roles: ['admin', 'operador'] },
+    { key: 'routes-admin', label: 'Rutas', icon: '🗺️', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
+    { key: 'stops', label: 'Paraderos', icon: '📍', roles: ['admin', 'operador', 'conductor'] },
+    { key: 'trips', label: 'Viajes', icon: '🚍', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
+    { key: 'reports', label: 'Reportes', icon: '📊', roles: ['admin', 'operador'] },
+    { key: 'profile', label: 'Mi Perfil', icon: '👤', roles: ['admin', 'operador', 'conductor', 'pasajero'] }
   ];
 
   return (

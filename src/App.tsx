@@ -199,9 +199,9 @@ export const App: React.FC = () => {
 
           <div className="topbar-right">
             <div className="user-profile-menu" onClick={() => changeView('profile')}>
-              <div className="user-avatar">{profile.name.charAt(0)}</div>
+              <div className="user-avatar">{(profile.name || profile.full_name || '?').charAt(0)}</div>
               <div className="user-info">
-                <span className="user-name">{profile.name}</span>
+                <span className="user-name">{profile.name || profile.full_name || 'Usuario'}</span>
                 <span className="user-role">{profile.role}</span>
               </div>
             </div>
