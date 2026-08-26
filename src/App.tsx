@@ -188,6 +188,7 @@ export const App: React.FC = () => {
         activeView={activeView} 
         setActiveView={changeView} 
         currentUser={profile} 
+        collapsed={sidebarCollapsed}
       />
 
       <div className="main-content" style={{ marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)' }}>

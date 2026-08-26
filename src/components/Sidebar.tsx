@@ -5,9 +5,10 @@ interface SidebarProps {
   activeView: string;
   setActiveView: (view: string) => void;
   currentUser: User;
+  collapsed: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, currentUser }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, currentUser, collapsed }) => {
   const role = currentUser.role;
 
   const menuItems = [
@@ -24,11 +25,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
   ];
 
   return (
-    <aside className="sidebar" id="sidebar">
+    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`} id="sidebar">
       <div className="sidebar-header">
         <a href="#dashboard" className="brand" onClick={() => setActiveView('dashboard')}>
-          <span className="brand-title">S.M.A.R.T <small style={{ fontSize: '0.6rem', opacity: 0.7, verticalAlign: 'middle', marginLeft: '5px', padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>v1.0.0</small></span>
-          <span className="brand-subtitle">Smart Mobility</span>
+          {collapsed ? (
+            <span className="brand-title" style={{ fontSize: '1rem' }}>S.</span>
+          ) : (
+            <>
+              <span className="brand-title">
+                S.M.A.R.T 
+                <small style={{ 
+                  fontSize: '0.55rem', 
+                  opacity: 0.8, 
+                  verticalAlign: 'middle', 
+                  marginLeft: '6px', 
+                  padding: '2px 5px', 
+                  background: 'var(--accent-glow)', 
+                  border: '1px solid var(--border-active)', 
+                  borderRadius: '4px',
+                  color: 'var(--accent-color)'
+                }}>
+                  v1.0.0
+                </small>
+              </span>
+              <span className="brand-subtitle">Smart Mobility</span>
+            </>
+          )}
         </a>
       </div>
       <ul className="sidebar-menu">
@@ -36,18 +58,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
           .filter(item => item.roles.includes(role))
           .map(item => (
             <li key={item.key} className={`sidebar-item ${activeView === item.key ? 'active' : ''}`}>
-              <a href={`#${item.key}`} onClick={() => setActiveView(item.key)}>
+              <a href={`#${item.key}`} onClick={() => setActiveView(item.key)} title={collapsed ? item.label : undefined}>
                 <span>{item.icon}</span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
               </a>
             </li>
           ))}
       </ul>
-      <div className="sidebar-footer">
-        <a href="#home" className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActiveView('home')}>
-          🏠 Volver al sitio público
+      <div className="sidebar-footer" style={{ padding: collapsed ? '0.5rem' : '1rem' }}>
+        <a 
+          href="#home" 
+          className="btn btn-secondary btn-sm" 
+          style={{ width: '100%', justifyContent: 'center', padding: collapsed ? '0.5rem 0' : '0.5rem 1rem' }} 
+          onClick={() => setActiveView('home')}
+          title={collapsed ? "Volver al sitio público" : undefined}
+        >
+          {collapsed ? '🏠' : '🏠 Volver al sitio público'}
         </a>
       </div>
     </aside>
+  );
   );
 };
