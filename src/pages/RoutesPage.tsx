@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
-import { MOCK_DATA } from '../mockData';
-import { StatusBadge } from '../components/Common';
+import React, { useState, useEffect } from 'react';
+import { routeService } from '../services/routeService';
 
 export const RoutesPage: React.FC = () => {
   const [query, setQuery] = useState('');
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredRoutes = MOCK_DATA.routes.filter(r => 
-    r.name.toLowerCase().includes(query.toLowerCase()) ||
-    r.code.toLowerCase().includes(query.toLowerCase())
+  useEffect(() => {
+    routeService.getAll()
+      .then((data: any[]) => setRoutes(data || []))
+      .catch((err: any) => console.error('Error cargando rutas:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredRoutes = routes.filter((r: any) => 
+    r.name?.toLowerCase().includes(query.toLowerCase()) ||
+    r.origin?.toLowerCase().includes(query.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <section className="section-container" style={{ paddingTop: '60px' }}>
+        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>⏳ Cargando rutas...</div>
+      </section>
+    );
+  }
 
   return (
     <section className="section-container" style={{ paddingTop: '60px' }}>
@@ -21,25 +37,32 @@ export const RoutesPage: React.FC = () => {
         <input 
           type="text" 
           className="search-input" 
-          placeholder="Buscar por código o nombre de ruta (Ej: Ruta 210...)" 
+          placeholder="Buscar por nombre de ruta u origen (Ej: Ruta Norte...)" 
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
         />
         <button className="btn btn-primary" onClick={() => {}}>Buscar Ruta</button>
       </div>
 
       <div className="routes-cards-grid">
-        {filteredRoutes.length > 0 ? filteredRoutes.map(r => (
-          <div key={r.code} className="route-public-card">
+        {filteredRoutes.length > 0 ? filteredRoutes.map((r: any) => (
+          <div key={r.id} className="route-public-card">
             <div>
               <div className="route-public-header">
-                <span className="route-public-code">{r.code}</span>
-                <StatusBadge status={r.status} />
+                <span className="route-public-code">{r.name}</span>
+                <span className={`badge badge-${r.status === 'activa' ? 'success' : 'warning'}`}>
+                  {r.status === 'activa' ? 'Activa' : r.status}
+                </span>
               </div>
               <h3 className="route-public-title">{r.name}</h3>
               <p className="route-public-detail">🏁 <strong>Origen:</strong> {r.origin}</p>
               <p className="route-public-detail">📍 <strong>Destino:</strong> {r.destination}</p>
-              <p className="route-public-detail" style={{ marginTop: '0.5rem' }}>⏱️ <strong>Duración:</strong> {r.duration}</p>
+              <p className="route-public-detail" style={{ marginTop: '0.5rem' }}>
+                ⏱️ <strong>Duración:</strong> {r.estimated_duration_min ? `${r.estimated_duration_min} mins` : 'N/A'}
+              </p>
+              {r.distance_km && (
+                <p className="route-public-detail">📏 <strong>Distancia:</strong> {r.distance_km} km</p>
+              )}
             </div>
             <div style={{ marginTop: '1.5rem' }}>
               <button 

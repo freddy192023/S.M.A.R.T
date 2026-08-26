@@ -12,7 +12,7 @@ export const Roles: React.FC = () => {
         </div>
       </div>
       <div className="roles-grid" style={{ padding: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        {MOCK_DATA.roles.map(role => (
+        {MOCK_DATA.roles.map((role: any) => (
           <div key={role.code} className="role-card" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
             <div className="role-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <RoleBadge role={role.name} />

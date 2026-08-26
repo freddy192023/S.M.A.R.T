@@ -1,6 +1,6 @@
-import type { MockDataStore } from './types';
+// Datos de prueba locales (legacy, se reemplazará progresivamente por servicios Supabase)
 
-export const MOCK_DATA: MockDataStore = {
+export const MOCK_DATA: any = {
   users: [
     { id: "U-001", name: "Carlos Administrador", email: "admin@smart.com", role: "Administrador", status: "Activo" },
     { id: "U-002", name: "Laura Operadora", email: "operator@smart.com", role: "Operador", status: "Activo" },
