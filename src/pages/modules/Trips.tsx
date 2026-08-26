@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { tripService } from '../../services/tripService';
 import { StatusBadge, ProcessFlow } from '../../components/Common';
+import { useNotification } from '../../context/NotificationContext';
 
 export const Trips: React.FC = () => {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     tripService.getAllWithDetails()
@@ -26,7 +28,7 @@ export const Trips: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Funcionalidad Programar Viaje - Próximamente.')}
+          onClick={() => showNotification('Planificar Viaje', 'El programador de itinerarios y asignación de buses por GPS estará disponible en la siguiente etapa.', 'info')}
         >
           + Programar Viaje
         </button>
@@ -63,7 +65,7 @@ export const Trips: React.FC = () => {
                     <div className="action-buttons">
                       <button 
                         className="btn btn-primary btn-sm" 
-                        onClick={() => alert(`Detalle operacional para viaje en ${t.route}`)}
+                        onClick={() => showNotification('Control Operacional', `Cargando consola de control satelital para el recorrido ${t.route}... (Funcionalidad de Monitoreo en Desarrollo)`, 'info')}
                       >
                         Ver Control
                       </button>

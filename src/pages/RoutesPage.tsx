@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { routeService } from '../services/routeService';
+import { useNotification } from '../context/NotificationContext';
 
 export const RoutesPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     routeService.getAll()
@@ -68,7 +70,7 @@ export const RoutesPage: React.FC = () => {
               <button 
                 className="btn btn-secondary btn-sm" 
                 style={{ width: '100%' }} 
-                onClick={() => alert(`Detalles de paradas interactivas para ${r.name} - En desarrollo.`)}
+                onClick={() => showNotification(r.name, `Sección informativa completa de paradas y tiempos de arribo por GPS para la ruta ${r.name}. (En desarrollo)`, 'info')}
               >
                 Ver recorrido completo
               </button>
@@ -83,3 +85,4 @@ export const RoutesPage: React.FC = () => {
     </section>
   );
 };
+export default RoutesPage;

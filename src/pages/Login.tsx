@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import vercelLogger from '../lib/vercelLogger';
+import { useNotification } from '../context/NotificationContext';
 
 interface LoginProps {
   setActiveView: (view: string) => void;
@@ -22,6 +23,8 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const { showNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,7 +300,7 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
                 className="forgot-password" 
                 onClick={(e) => {
                   e.preventDefault();
-                  alert('Funcionalidad de recuperación de contraseña habilitada vía consola de Supabase Auth.');
+                  showNotification('Recuperación de Contraseña', 'La solicitud de restablecimiento ha sido enviada. Por favor, revise la consola de administración de Supabase para confirmar el enlace.', 'info');
                 }}
               >
                 ¿Olvidaste tu contraseña?

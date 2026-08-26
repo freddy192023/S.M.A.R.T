@@ -81,8 +81,30 @@ export const App: React.FC = () => {
     profile: 'Perfil de Usuario'
   };
 
+  // Role-based access map: which roles can see which views
+  const roleAccess: Record<string, string[]> = {
+    dashboard: ['admin', 'operador', 'conductor', 'pasajero'],
+    users: ['admin'],
+    roles: ['admin'],
+    buses: ['admin', 'operador'],
+    drivers: ['admin', 'operador'],
+    'routes-admin': ['admin', 'operador', 'conductor', 'pasajero'],
+    stops: ['admin', 'operador', 'conductor'],
+    trips: ['admin', 'operador', 'conductor', 'pasajero'],
+    reports: ['admin', 'operador'],
+    profile: ['admin', 'operador', 'conductor', 'pasajero']
+  };
+
   // Render sub-content for private modules
   const renderPrivateContent = () => {
+    // Role guard: if user doesn't have access to this view, redirect to dashboard
+    const allowedRoles = roleAccess[activeView];
+    if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+      // Use a setTimeout to avoid state update during render
+      setTimeout(() => changeView('dashboard'), 0);
+      return null;
+    }
+
     switch (activeView) {
       case 'dashboard':
         return <Dashboard setActiveView={changeView} />;

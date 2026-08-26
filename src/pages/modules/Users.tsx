@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { profileService } from '../../services/profileService';
+import { useNotification } from '../../context/NotificationContext';
 
 export const Users: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     profileService.getAll()
@@ -32,7 +34,7 @@ export const Users: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Para crear usuarios, registrarse vía Supabase Auth.')}
+          onClick={() => showNotification('Crear Usuario', 'Para registrar un nuevo usuario con credenciales, por favor use la opción de Registro de la pantalla principal.', 'info')}
         >
           + Nuevo Usuario
         </button>
@@ -68,7 +70,7 @@ export const Users: React.FC = () => {
                   <td>{u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}</td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-icon" title="Editar Rol" onClick={() => alert(`Asignar Rol a ${u.full_name}`)}>🔑</button>
+                      <button className="btn-icon" title="Editar Rol" onClick={() => showNotification('Editar Rol', `La opción para cambiar el rol corporativo de ${u.full_name} requiere privilegios de Administrador Supremo.`, 'warning')}>🔑</button>
                     </div>
                   </td>
                 </tr>

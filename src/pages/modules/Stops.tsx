@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { stopService } from '../../services/stopService';
+import { useNotification } from '../../context/NotificationContext';
 
 export const Stops: React.FC = () => {
   const [stops, setStops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     stopService.getAll()
@@ -25,7 +27,7 @@ export const Stops: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Funcionalidad Crear Parada - Próximamente.')}
+          onClick={() => showNotification('Agregar Parada', 'La creación y mapeo geográfico de nuevos paraderos se habilitará en la siguiente actualización.', 'info')}
         >
           + Agregar Parada
         </button>
@@ -53,7 +55,7 @@ export const Stops: React.FC = () => {
                   <td>{p.stop_order}</td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-icon" title="Editar" onClick={() => alert(`Editar ${p.name}`)}>✏️</button>
+                      <button className="btn-icon" title="Editar" onClick={() => showNotification('Editar Parada', `El editor de geolocalización para la parada ${p.name} está en desarrollo.`, 'warning')}>✏️</button>
                     </div>
                   </td>
                 </tr>
