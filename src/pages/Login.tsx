@@ -25,7 +25,7 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
     try {
       if (isRegister) {
         vercelLogger.log(`Intento de registro de usuario: ${email}`);
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
