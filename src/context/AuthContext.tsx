@@ -30,8 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error al obtener perfil:', error.message);
         setProfile(null);
-      } else {
-        setProfile(data as AppUser);
+      } else if (data) {
+        // Mapear full_name → name para compatibilidad con la UI
+        setProfile({ ...data, name: data.full_name || data.email } as AppUser);
       }
     } catch (err) {
       console.error('Error inesperado obteniendo perfil:', err);

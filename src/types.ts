@@ -1,11 +1,17 @@
 // TypeScript Interfaces for S.M.A.R.T
+// Alineados con el esquema de Supabase
 
 export interface User {
   id: string;
-  name: string;
+  full_name: string;
+  name: string;       // Alias de compatibilidad (se mapea desde full_name)
   email: string;
-  role: 'Administrador' | 'Operador' | 'Conductor' | 'Pasajero';
-  status: 'Activo' | 'Inactivo';
+  role: string;
+  phone?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  status?: string;
 }
 
 export interface Role {
@@ -16,44 +22,71 @@ export interface Role {
 }
 
 export interface Bus {
-  code: string;
+  id: string;
   plate: string;
+  brand: string;
   model: string;
+  year: number;
   capacity: number;
-  status: 'Activo' | 'Inactivo' | 'En Mantención';
+  status: string;
+  mileage?: number;
+  last_maintenance?: string;
+  created_at?: string;
 }
 
 export interface Driver {
-  code: string;
-  name: string;
-  license: string;
-  status: 'Activo' | 'En Viaje' | 'Descanso';
+  id: string;
+  full_name: string;
+  license_number: string;
+  license_expiry: string;
   phone: string;
+  email?: string;
+  status: string;
+  hire_date?: string;
+  created_at?: string;
 }
 
 export interface Route {
-  code: string;
+  id: string;
   name: string;
   origin: string;
   destination: string;
-  status: 'Activa' | 'Inactiva';
-  duration: string;
+  distance_km?: number;
+  estimated_duration_min?: number;
+  status: string;
+  created_at?: string;
 }
 
 export interface Stop {
-  code: string;
+  id: string;
+  route_id?: string;
   name: string;
-  address: string;
-  type: 'Punto de Control' | 'Terminal' | 'Estándar';
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  stop_order: number;
+  estimated_arrival_min?: number;
+  routes?: { name: string };
 }
 
 export interface Trip {
-  route: string;
-  bus: string;
-  conductor: string;
-  date: string;
-  time: string;
-  status: 'Programado' | 'En Curso' | 'Finalizado';
+  id: string;
+  route_id?: string;
+  bus_id?: string;
+  driver_id?: string;
+  departure_time: string;
+  arrival_time?: string;
+  status: string;
+  max_passengers?: number;
+  actual_passengers?: number;
+  observations?: string;
+  // Campos calculados por el servicio
+  route?: string;
+  bus?: string;
+  conductor?: string;
+  date?: string;
+  time?: string;
+  raw?: any;
 }
 
 export interface BusUtilization {
@@ -70,15 +103,4 @@ export interface TripCountByDay {
 export interface ReportsData {
   tripCountByDay: TripCountByDay;
   busUtilization: BusUtilization[];
-}
-
-export interface MockDataStore {
-  users: User[];
-  roles: Role[];
-  buses: Bus[];
-  drivers: Driver[];
-  routes: Route[];
-  stops: Stop[];
-  trips: Trip[];
-  reports: ReportsData;
 }
