@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import vercelLogger from '../lib/vercelLogger';
 
 interface LoginProps {
   setActiveView: (view: string) => void;
@@ -23,7 +24,7 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
 
     try {
       if (isRegister) {
-        // Lógica de Registro (Sign Up) con metadatos del perfil
+        vercelLogger.log(`Intento de registro de usuario: ${email}`);
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -35,32 +36,30 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
         });
 
         if (error) {
+          vercelLogger.error(`Error en registro para ${email}`, error);
           setErrorMessage(error.message);
-        } else if (data.user && data.session === null) {
-          // Si Supabase requiere confirmación de email por defecto
-          setSuccessMessage('¡Registro exitoso! Por favor verifica tu correo electrónico para activar tu cuenta.');
-          // Limpiar campos
-          setEmail('');
-          setPassword('');
-          setFullName('');
         } else {
+          vercelLogger.log(`Registro exitoso para ${email}`);
           setSuccessMessage('¡Usuario registrado con éxito!');
           setActiveView('dashboard');
         }
       } else {
-        // Lógica de Inicio de Sesión (Sign In)
-        const { error } = await supabase.auth.signInWithPassword({
+        vercelLogger.log(`Intento de inicio de sesión: ${email}`);
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) {
+          vercelLogger.error(`Error de inicio de sesión para ${email}`, error);
           setErrorMessage(error.message);
         } else {
+          vercelLogger.log(`Inicio de sesión exitoso para ${email}`, data.user);
           setActiveView('dashboard');
         }
       }
     } catch (err: any) {
+      vercelLogger.error(`Error inesperado de auth para ${email}`, err);
       setErrorMessage(err.message || 'Ocurrió un error inesperado.');
     } finally {
       setLoading(false);
