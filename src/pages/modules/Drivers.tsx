@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { driverService } from '../../services/driverService';
+import { useNotification } from '../../context/NotificationContext';
 
 const statusMap: Record<string, string> = {
   activo: 'Activo',
@@ -11,6 +12,7 @@ const statusMap: Record<string, string> = {
 export const Drivers: React.FC = () => {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     driverService.getAll()
@@ -32,7 +34,7 @@ export const Drivers: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Funcionalidad Crear Conductor - Próximamente.')}
+          onClick={() => showNotification('Gestión de Conductores', 'Para registrar un nuevo Conductor, por favor use el formulario de registro de la pantalla principal con la opción del Rol Conductor seleccionada.', 'info')}
         >
           + Agregar Conductor
         </button>
@@ -62,8 +64,8 @@ export const Drivers: React.FC = () => {
                   <td><span className={`badge badge-${drv.status === 'activo' ? 'success' : drv.status === 'inactivo' ? 'danger' : 'warning'}`}>{statusMap[drv.status] || drv.status}</span></td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-icon" title="Editar" onClick={() => alert(`Editar ${drv.full_name}`)}>✏️</button>
-                      <button className="btn-icon text-danger" title="Desactivar" onClick={() => alert(`Cambiar estado de ${drv.full_name}`)}>⚠️</button>
+                      <button className="btn-icon" title="Editar" onClick={() => showNotification('Editar Conductor', `El formulario para editar a ${drv.full_name} estará disponible en la siguiente actualización.`, 'warning')}>✏️</button>
+                      <button className="btn-icon text-danger" title="Desactivar" onClick={() => showNotification('Desactivar Conductor', `No se puede desactivar al conductor ${drv.full_name} debido a que se encuentra con asignaciones operacionales activas.`, 'danger')}>⚠️</button>
                     </div>
                   </td>
                 </tr>

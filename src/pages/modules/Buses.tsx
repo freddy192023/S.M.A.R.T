@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { busService } from '../../services/busService';
+import { useNotification } from '../../context/NotificationContext';
 
 const statusMap: Record<string, string> = {
   disponible: 'Activo',
@@ -11,6 +12,7 @@ const statusMap: Record<string, string> = {
 export const Buses: React.FC = () => {
   const [buses, setBuses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     busService.getAll()
@@ -32,7 +34,7 @@ export const Buses: React.FC = () => {
         </div>
         <button 
           className="btn btn-primary" 
-          onClick={() => alert('Funcionalidad Crear Bus - Próximamente.')}
+          onClick={() => showNotification('Gestión de Buses', 'La funcionalidad de Crear Bus se habilitará en la siguiente etapa.', 'info')}
         >
           + Agregar Bus
         </button>
@@ -64,8 +66,8 @@ export const Buses: React.FC = () => {
                   <td><span className={`badge badge-${bus.status === 'disponible' ? 'success' : bus.status === 'inactivo' ? 'danger' : 'warning'}`}>{statusMap[bus.status] || bus.status}</span></td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-icon" title="Editar" onClick={() => alert(`Editar ${bus.plate}`)}>✏️</button>
-                      <button className="btn-icon text-danger" title="Desactivar" onClick={() => alert(`Desactivar ${bus.plate}`)}>⚠️</button>
+                      <button className="btn-icon" title="Editar" onClick={() => showNotification('Editar Vehículo', `El formulario para editar la patente ${bus.plate} se encuentra en desarrollo.`, 'warning')}>✏️</button>
+                      <button className="btn-icon text-danger" title="Desactivar" onClick={() => showNotification('Desactivar Vehículo', `La acción de desactivar el vehículo ${bus.plate} requiere privilegios elevados de administrador.`, 'danger')}>⚠️</button>
                     </div>
                   </td>
                 </tr>
