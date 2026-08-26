@@ -78,5 +78,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
       </div>
     </aside>
   );
-  );
 };
