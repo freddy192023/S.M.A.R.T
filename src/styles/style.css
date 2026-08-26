@@ -544,6 +544,31 @@ body {
   background: rgba(255, 255, 255, 0.08);
 }
 
+/* Select dropdown styling */
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300d2c4' d='M6 8.825L0.375 3.2l0.85-0.85L6 7.125l4.775-4.775 0.85 0.85z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 12px;
+  padding-right: 2.5rem;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+select.form-input:hover {
+  border-color: var(--accent-color);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+select.form-input option {
+  background: var(--bg-primary, #0a0e1a);
+  color: var(--text-main, #e0e0e0);
+  padding: 0.5rem;
+}
+
 .password-toggle {
   position: absolute;
   right: 12px;

@@ -179,7 +179,6 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
                 <select
                   id="register-role"
                   className="form-input"
-                  style={{ background: 'var(--bg-primary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', height: '42px' }}
                   value={role}
                   onChange={(e) => {
                     setRole(e.target.value);
