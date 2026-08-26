@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ activeView, setActiveView, curre
   return (
     <header className="public-header">
       <a href="#home" className="brand" onClick={() => handleNavClick('home')}>
-        <span className="brand-title">S.M.A.R.T <small style={{ fontSize: '0.6rem', opacity: 0.7, verticalAlign: 'middle', marginLeft: '5px', padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>v1.0.0</small></span>
+        <span className="brand-title">S.M.A.R.T <small style={{ fontSize: '0.6rem', opacity: 0.7, verticalAlign: 'middle', marginLeft: '5px', padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>v1.1.0</small></span>
         <span className="brand-subtitle">Smart Mobility & Administration Resource Technology</span>
       </a>
       <button className="menu-toggle" onClick={() => setMenuActive(!menuActive)}>☰</button>

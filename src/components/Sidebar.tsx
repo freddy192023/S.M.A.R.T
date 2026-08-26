@@ -45,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
                   borderRadius: '4px',
                   color: 'var(--accent-color)'
                 }}>
-                  v1.0.0
+                  v1.1.0
                 </small>
               </span>
               <span className="brand-subtitle">Smart Mobility</span>
