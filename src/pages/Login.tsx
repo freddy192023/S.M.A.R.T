@@ -6,30 +6,62 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
+  const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (isRegister) {
+        // Lógica de Registro (Sign Up) con metadatos del perfil
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName
+            }
+          }
+        });
 
-      if (error) {
-        setErrorMessage(error.message);
+        if (error) {
+          setErrorMessage(error.message);
+        } else if (data.user && data.session === null) {
+          // Si Supabase requiere confirmación de email por defecto
+          setSuccessMessage('¡Registro exitoso! Por favor verifica tu correo electrónico para activar tu cuenta.');
+          // Limpiar campos
+          setEmail('');
+          setPassword('');
+          setFullName('');
+        } else {
+          setSuccessMessage('¡Usuario registrado con éxito!');
+          setActiveView('dashboard');
+        }
       } else {
-        setActiveView('dashboard');
+        // Lógica de Inicio de Sesión (Sign In)
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setErrorMessage(error.message);
+        } else {
+          setActiveView('dashboard');
+        }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Ocurrió un error inesperado al iniciar sesión.');
+      setErrorMessage(err.message || 'Ocurrió un error inesperado.');
     } finally {
       setLoading(false);
     }
@@ -40,8 +72,9 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
       <div className="login-card">
         <div className="login-header">
           <h2 style={{ color: '#ffffff' }}>S.M.A.R.T</h2>
-          <p>Plataforma de Control de Transporte</p>
+          <p>{isRegister ? 'Crear una nueva cuenta' : 'Plataforma de Control de Transporte'}</p>
         </div>
+        
         <form onSubmit={handleSubmit}>
           {errorMessage && (
             <div style={{ 
@@ -56,6 +89,37 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
               ⚠️ {errorMessage}
             </div>
           )}
+
+          {successMessage && (
+            <div style={{ 
+              marginBottom: '1rem', 
+              padding: '0.8rem', 
+              background: 'rgba(16, 185, 129, 0.1)', 
+              border: '1px solid rgba(16, 185, 129, 0.3)', 
+              borderRadius: '8px', 
+              color: 'var(--success-color)', 
+              fontSize: '0.85rem' 
+            }}>
+              ✅ {successMessage}
+            </div>
+          )}
+
+          {isRegister && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="register-name">Nombre Completo</label>
+              <input 
+                type="text" 
+                id="register-name" 
+                className="form-input" 
+                placeholder="Juan Pérez" 
+                required 
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label" htmlFor="login-email">Correo Electrónico</label>
             <input 
@@ -69,6 +133,7 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
               disabled={loading}
             />
           </div>
+
           <div className="form-group">
             <label className="form-label" htmlFor="login-password">Contraseña</label>
             <div className="input-wrapper">
@@ -92,32 +157,62 @@ export const Login: React.FC<LoginProps> = ({ setActiveView }) => {
               </button>
             </div>
           </div>
-          <div className="form-options">
-            <label className="remember-me">
-              <input type="checkbox" id="remember-me" defaultChecked /> Recordarme
-            </label>
-            <a 
-              href="#" 
-              className="forgot-password" 
-              onClick={(e) => {
-                e.preventDefault();
-                alert('Funcionalidad de recuperación de contraseña habilitada vía consola de Supabase Auth.');
-              }}
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
+
+          {!isRegister && (
+            <div className="form-options">
+              <label className="remember-me">
+                <input type="checkbox" id="remember-me" defaultChecked /> Recordarme
+              </label>
+              <a 
+                href="#" 
+                className="forgot-password" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('Funcionalidad de recuperación de contraseña habilitada vía consola de Supabase Auth.');
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="btn btn-primary" 
-            style={{ width: '100%' }}
+            style={{ width: '100%', marginTop: isRegister ? '1rem' : '0' }}
             disabled={loading}
           >
-            {loading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
+            {loading ? 'Procesando...' : (isRegister ? 'Registrarse' : 'Iniciar Sesión')}
           </button>
         </form>
 
-        <div className="back-to-home">
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
+          <span style={{ color: 'var(--text-muted)' }}>
+            {isRegister ? '¿Ya tienes una cuenta? ' : '¿No tienes cuenta aún? '}
+          </span>
+          <button 
+            type="button" 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'var(--accent-color)', 
+              cursor: 'pointer', 
+              fontWeight: '600',
+              textDecoration: 'underline',
+              padding: 0
+            }}
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setErrorMessage(null);
+              setSuccessMessage(null);
+            }}
+            disabled={loading}
+          >
+            {isRegister ? 'Inicia Sesión' : 'Regístrate aquí'}
+          </button>
+        </div>
+
+        <div className="back-to-home" style={{ marginTop: '1.5rem' }}>
           <a href="#home" onClick={(e) => { e.preventDefault(); setActiveView('home'); }}>← Volver al inicio</a>
         </div>
       </div>
