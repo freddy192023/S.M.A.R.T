@@ -248,6 +248,24 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at);
 
 -- ============================================
+-- PERMISOS DE API DE SUPABASE
+-- ============================================
+
+-- Desactivar RLS en tablas principales para permitir prototipado y lectura sin restricciones iniciales
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.buses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.drivers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.routes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stops DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trips DISABLE ROW LEVEL SECURITY;
+
+-- Conceder permisos de uso y selección a los roles de la API de Supabase
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
+
+-- ============================================
 -- DATOS DE SEMILLERO (SEED DATA)
 -- ============================================
 
