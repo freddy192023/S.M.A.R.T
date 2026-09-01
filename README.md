@@ -2,13 +2,13 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/versión-1.1.0-00d2c4?style=for-the-badge&labelColor=0a0e1a)
+![Version](https://img.shields.io/badge/versión-2.0.0-00d2c4?style=for-the-badge&labelColor=0a0e1a)
 ![Stack](https://img.shields.io/badge/React_19-TypeScript_6-3178c6?style=for-the-badge&labelColor=0a0e1a)
 ![Backend](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=for-the-badge&labelColor=0a0e1a)
 ![Deploy](https://img.shields.io/badge/Vercel-Producción-000000?style=for-the-badge&labelColor=0a0e1a)
 ![License](https://img.shields.io/badge/Licencia-Académica-ff6b6b?style=for-the-badge&labelColor=0a0e1a)
 
-**Plataforma inteligente de gestión y control de transporte corporativo en tiempo real**
+**Plataforma inteligente de gestión y reserva de transporte privado de pasajeros**
 
 🌐 [Ver Demo en Vivo](https://s-m-a-r-t-six.vercel.app) · 📂 [Repositorio GitHub](https://github.com/freddy192023/S.M.A.R.T)
 
@@ -20,16 +20,18 @@
 
 - [Descripción General](#-descripción-general)
 - [Problema que Resuelve](#-problema-que-resuelve)
-- [Características Actuales](#-características-actuales-v110)
+- [Proceso Principal del Sistema](#-proceso-principal-del-sistema)
+- [Tipos de Usuarios y Roles](#-tipos-de-usuarios-y-roles-rbac)
+- [Módulos del Sistema](#-módulos-del-sistema)
+- [Sistema de Asientos](#-sistema-de-asientos-nuevo)
+- [Sistema de Reservas](#-sistema-de-reservas-nuevo)
 - [Arquitectura del Software](#️-arquitectura-del-software)
 - [Stack Tecnológico](#-stack-tecnológico)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Sistema de Roles y Permisos](#-sistema-de-roles-y-permisos-rbac)
 - [Base de Datos](#️-base-de-datos)
-- [Despliegue y CI/CD](#-despliegue-y-cicd)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Requisitos de Software](#-requisitos-de-software)
 - [Cómo Ejecutar Localmente](#-cómo-ejecutar-localmente)
 - [Hoja de Ruta](#-hoja-de-ruta--roadmap)
-- [Visión a Largo Plazo](#-visión-a-largo-plazo)
 - [Equipo y Contexto Académico](#-equipo-y-contexto-académico)
 - [Historial de Versiones](#-historial-de-versiones)
 
@@ -37,9 +39,11 @@
 
 ## 🧭 Descripción General
 
-**S.M.A.R.T** es una plataforma web integral diseñada para optimizar la logística, control y administración del transporte empresarial. Permite a las organizaciones gestionar su flota de vehículos, asignar conductores, planificar rutas, programar viajes y monitorear operaciones en tiempo real desde un panel centralizado.
+**S.M.A.R.T.** es una plataforma web destinada a la gestión integral de una empresa de transporte privado de pasajeros.
 
-El sistema está construido con una filosofía **Mobile-First** y un diseño visual **Cyberpunk/Glassmorphism** que prioriza la experiencia de usuario con interfaces modernas, animaciones fluidas y una paleta tecnológica de tonos Teal y Slate Blue.
+El sistema permite a la empresa administrar sus **buses, conductores, rutas, paraderos y viajes programados**, mientras que los pasajeros pueden consultar los viajes disponibles, seleccionar un asiento y realizar una reserva de forma digital para viajar en una fecha y horario determinados.
+
+La plataforma centraliza toda la operación de la empresa y entrega al pasajero una experiencia completamente digital para consultar disponibilidad y reservar su viaje.
 
 > 🎓 Este proyecto fue desarrollado como prototipo funcional para la asignatura de **Técnicas de Calidad de Software**, aplicando buenas prácticas de desarrollo web, modularización, tipado seguro y arquitectura escalable.
 
@@ -47,84 +51,340 @@ El sistema está construido con una filosofía **Mobile-First** y un diseño vis
 
 ## 🎯 Problema que Resuelve
 
-Las empresas de transporte corporativo enfrentan desafíos críticos en su operación diaria:
+Las empresas de transporte privado enfrentan dificultades para administrar de manera centralizada sus vehículos, conductores, rutas y viajes. Un proceso basado en consultas presenciales, llamadas telefónicas o registros manuales dificulta conocer rápidamente:
 
-| Problema | Solución S.M.A.R.T |
-|---|---|
-| **Asignación manual** de buses y conductores | Panel inteligente con asignación centralizada y validación de disponibilidad |
-| **Falta de visibilidad** del estado operativo | Dashboard en tiempo real con métricas, KPIs y viajes en curso |
-| **Control de acceso inexistente** | Sistema RBAC con 4 niveles de roles (Admin, Operador, Conductor, Pasajero) |
-| **Rutas desorganizadas** | Módulo de rutas con origen, destino, distancia, duración y paraderos intermedios |
-| **Reportes manuales** | Generación automática de métricas de utilización de flota y frecuencia de viajes |
-| **Datos dispersos** en hojas de cálculo | Base de datos relacional PostgreSQL en la nube con Supabase |
+- Qué viajes están disponibles y en qué horarios.
+- Cuántos asientos quedan libres en cada bus.
+- Qué bus y conductor realizará un viaje determinado.
+- Qué pasajeros tienen una reserva confirmada.
+- Cuál es la ocupación real de la flota.
+
+### 💡 Solución propuesta
+
+S.M.A.R.T. centraliza toda esta información en una única plataforma web accesible desde cualquier dispositivo.
+
+| Problema                               | Solución S.M.A.R.T.                          |
+| -------------------------------------- | -------------------------------------------- |
+| Administración manual de buses         | Módulo de gestión de flota con CRUD completo |
+| Información dispersa de conductores    | Registro centralizado de conductores         |
+| Rutas desorganizadas                   | Gestión de rutas y paraderos                 |
+| Programación manual de viajes          | Módulo de programación de viajes             |
+| Dificultad para conocer disponibilidad | Sistema de disponibilidad de asientos        |
+| Reservas realizadas manualmente        | Reserva digital con selección de asiento     |
+| Falta de información operacional       | Dashboard adaptativo y reportes              |
+| Acceso sin restricciones               | Sistema RBAC con 4 roles                     |
+| Información dispersa                   | Base de datos PostgreSQL en la nube          |
 
 ---
 
-## ✅ Características Actuales (v1.1.0)
+## 🔄 Proceso Principal del Sistema
 
-### 🌐 Portal Público (Sin autenticación)
-- **Landing Page** con diseño premium y animaciones glassmorphic
-- **Sección "Acerca de"** con información institucional
-- **¿Cómo Funciona?** — Explicación visual del flujo del sistema
-- **Consulta de Rutas Públicas** — Búsqueda en tiempo real de rutas activas desde la base de datos
+El proceso más importante de S.M.A.R.T. es la **reserva de un viaje**, que demuestra que el sistema no es solo un CRUD, sino que tiene un flujo de negocio completo.
 
-### 🔐 Sistema de Autenticación
-- Registro de cuentas con **selección de rol** (Pasajero, Conductor, Operador, Admin)
-- Campos dinámicos condicionales: al seleccionar "Conductor" se solicitan Licencia, Vencimiento y Teléfono
-- Login seguro con **Supabase Auth** (email + contraseña)
-- Sesiones persistentes con tokens JWT automáticos
-- Recuperación de contraseña integrada
+```
+              EMPRESA DE TRANSPORTE
+                      │
+                      ▼
+         Administra buses, conductores y rutas
+                      │
+                      ▼
+              Programa viajes
+                      │
+                      ▼
+          PUBLICA VIAJES DISPONIBLES
+                      │
+                      ▼
+                  PASAJERO
+                      │
+          ┌───────────┴───────────┐
+          ▼                       ▼
+  Inicia sesión           Busca origen/destino/fecha
+          │                       │
+          └───────────┬───────────┘
+                      ▼
+             Selecciona un viaje
+                      │
+                      ▼
+           Consulta disponibilidad
+                      │
+                      ▼
+             Selecciona asiento
+                      │
+                      ▼
+             Revisa información
+                      │
+                      ▼
+             Confirma reserva
+                      │
+                      ▼
+              Pago simulado
+                      │
+                      ▼
+           Reserva confirmada ✅
+                      │
+                      ▼
+          Genera comprobante PDF
+```
 
-### 📊 Dashboard Administrativo
-- **Tarjetas de estadísticas** en tiempo real (buses activos, conductores, rutas, viajes)
-- **Viajes en curso** monitoreados en tabla operacional
-- **Enlaces rápidos** filtrados según el rol del usuario
-- Contenido adaptativo: los pasajeros ven un dashboard simplificado
+---
 
-### 🚌 Gestión de Flota de Buses
-- CRUD completo: crear, editar y listar buses
-- Control de patentes, marcas, modelos, año y capacidad
-- Estados operativos: `Disponible`, `En Mantención`, `Fuera de Servicio`
-- Datos persistidos en PostgreSQL vía Supabase
+## 👥 Tipos de Usuarios y Roles (RBAC)
 
-### 👨‍✈️ Registro de Conductores
-- Administración de choferes con licencia, vencimiento y teléfono
-- Estados: `Activo`, `En Viaje`, `Inactivo`
-- Vinculación automática con el perfil de usuario al registrarse como conductor
+S.M.A.R.T. implementa un **Control de Acceso Basado en Roles** con 4 niveles jerárquicos. Los roles se asignan al momento del registro y determinan qué módulos y acciones están disponibles para cada usuario.
 
-### 🗺️ Control de Rutas
-- Registro de rutas con origen, destino, distancia (km) y duración estimada
-- Estados: `Activa`, `Inactiva`, `En Mantención`
-- Consulta pública de rutas para pasajeros
+| Rol | Nivel | Acceso |
+|---|---|---|
+| **🔴 Administrador** | Total | Todos los módulos, usuarios, reportes y configuración |
+| **🟠 Operador** | Gestión | Buses, conductores, rutas, viajes, paraderos, reservas |
+| **🟡 Conductor** | Operativo | Viajes asignados, ruta, pasajeros del viaje, perfil |
+| **🟢 Pasajero** | Reservas | Buscar viajes, seleccionar asiento, reservar, mis reservas |
 
-### 📍 Paraderos y Paradas
-- Gestión de paraderos intermedios vinculados a rutas
-- Orden secuencial de paradas dentro de cada ruta
+### 🔴 Administrador
+
+Responsable de la administración completa del sistema. Tiene acceso total a todos los módulos incluyendo gestión de usuarios, roles, reportes y configuración general del sistema.
+
+### 🟠 Operador
+
+Responsable de la operación diaria de la empresa. Registra y modifica buses, conductores, rutas y paraderos, programa viajes, asigna buses y conductores, y consulta reservas y reportes operacionales.
+
+### 🟡 Conductor
+
+Responsable de los viajes que tenga asignados. Puede ver su itinerario, consultar la ruta y los horarios, revisar la información del bus y consultar los pasajeros con reserva en cada viaje. También puede cambiar el estado de un viaje según corresponda.
+
+### 🟢 Pasajero
+
+Usuario final del sistema. Puede registrarse, iniciar sesión, buscar viajes por origen, destino y fecha, ver disponibilidad de asientos, seleccionar un asiento, realizar y cancelar reservas, y ver el detalle de sus viajes con el comprobante correspondiente.
+
+### Implementación técnica:
+- **Sidebar dinámico**: cada ítem del menú tiene un array `roles[]` que filtra la visibilidad.
+- **Guardia de rutas en App.tsx**: un mapa `roleAccess` verifica el permiso antes de renderizar cada vista.
+- **Dashboard adaptativo**: las tarjetas de estadísticas y accesos rápidos se adaptan según el rol.
+- **Registro condicional**: al seleccionar "Conductor" aparecen campos adicionales (licencia, vencimiento, teléfono).
+
+---
+
+## 📦 Módulos del Sistema
+
+### 🚌 Gestión de Buses
+
+Módulo principal para administrar la flota de la empresa. Cada bus registra:
+
+- Patente, marca, modelo y año
+- Capacidad (número de asientos)
+- Estado operativo
+
+```
+Estados: Disponible → En Mantención → Fuera de Servicio
+```
+
+> El sistema impide programar viajes con buses que estén fuera de servicio.
+
+---
+
+### 👨‍✈️ Gestión de Conductores
+
+Registro centralizado de todos los conductores de la empresa:
+
+- Nombre, correo, teléfono
+- Número y fecha de vencimiento de licencia
+- Estado actual
+
+```
+Estados: Activo → En Viaje → Inactivo
+```
+
+> Antes de asignar un conductor a un viaje se verifica que esté disponible.
+
+---
+
+### 🗺️ Gestión de Rutas y Paraderos
+
+Las rutas representan los recorridos ofrecidos por la empresa. Cada ruta incluye:
+
+- Origen y destino
+- Distancia (km) y duración estimada
+- Estado de la ruta
+
+Además, cada ruta puede tener múltiples **paraderos** ordenados secuencialmente:
+
+```
+Origen
+  │
+  ▼
+Paradero 1
+  │
+  ▼
+Paradero 2
+  │
+  ▼
+Destino
+```
+
+---
 
 ### 🚍 Programación de Viajes
-- Asignación de bus + conductor + ruta para crear viajes
-- Estados de viaje: `Programado`, `En Curso`, `Finalizado`, `Cancelado`
-- Registro de horarios de salida y llegada
 
-### 📈 Reportes y Métricas
-- Gráfico de barras de **frecuencia de viajes semanales**
-- Tabla de **utilización de flota** (viajes realizados, horas de operación, % de uso)
-- Cálculos automáticos basados en datos reales de la base de datos
+Un **viaje** es una instancia concreta de una ruta en una fecha y horario determinados. El operador configura:
 
-### 👥 Gestión de Usuarios
-- Listado completo de usuarios registrados con rol, email y estado
-- Visualización de perfiles con datos de Supabase Auth
+```
+Ruta + Bus + Conductor + Fecha + Hora de salida + Precio → Viaje programado
+```
 
-### 🔔 Sistema de Notificaciones
-- **Modales estilizados** con diseño glassmorphic premium (reemplazo total de `alert()` nativos)
-- Tipos de notificación: `success`, `error`, `warning`, `info`
-- Animaciones de entrada/salida suaves con backdrop blur
-- Contexto global (`NotificationContext`) accesible desde cualquier componente
+Estados posibles:
 
-### 🛡️ Control de Acceso por Rol
-- Sidebar dinámico que muestra solo los módulos permitidos por rol
-- Guardia de rutas: redirección automática si se intenta acceder a una vista restringida
-- Dashboard con contenido adaptativo según el nivel de permisos
+```
+Programado → En Curso → Finalizado
+                      ↘ Cancelado
+```
+
+---
+
+### 🔎 Búsqueda de Viajes (Pasajero)
+
+El pasajero tiene una pantalla dedicada para buscar viajes disponibles:
+
+- **Filtros**: Origen · Destino · Fecha
+- **Resultados**: horario, precio, asientos disponibles y bus asignado
+
+```
+Lima → Huancayo — 15 Septiembre 2026
+
+  08:00 ─────────── S/ 35.00
+  Bus: ABC-123 · Asientos disponibles: 18
+  [Seleccionar viaje →]
+```
+
+---
+
+### 📊 Dashboard
+
+El Dashboard es el panel central del sistema y se adapta según el rol:
+
+**Administrador / Operador**
+- Cantidad de buses, conductores activos, viajes programados y en curso
+- Total de reservas, asientos ocupados y disponibles
+- Porcentaje de utilización de la flota
+
+**Pasajero**
+- Próximos viajes con reserva activa
+- Historial de viajes realizados
+- Acceso rápido para buscar nuevos viajes
+
+---
+
+### 📈 Reportes
+
+S.M.A.R.T. incorpora reportes operacionales para la empresa:
+
+| Reporte | Descripción |
+|---|---|
+| **Viajes por ruta** | Frecuencia de viajes realizados por cada ruta |
+| **Reservas por viaje** | Cantidad de reservas confirmadas por viaje |
+| **Utilización de flota** | Porcentaje de ocupación por bus |
+| **Ingresos estimados** | Basado en reservas confirmadas y precio del viaje |
+
+---
+
+## 💺 Sistema de Asientos (NUEVO)
+
+Esta es una de las principales novedades de la versión 2.0. Cada bus tiene una distribución de asientos asociada a su capacidad.
+
+```
+┌───────────────────────┐
+│       CONDUCTOR       │
+├─────┬─────┬───┬───────┤
+│ 01  │ 02  │   │ 03    │
+├─────┼─────┼───┼───────┤
+│ 04  │ 05  │   │ 06    │
+├─────┼─────┼───┼───────┤
+│ 07  │ 08  │   │ 09    │
+├─────┼─────┼───┼───────┤
+│ 10  │ 11  │   │ 12    │
+└─────┴─────┴───┴───────┘
+```
+
+Cada asiento tiene un estado visual en tiempo real:
+
+| Estado | Significado |
+|---|---|
+| 🟢 Disponible | El asiento puede ser seleccionado |
+| 🔴 Reservado | El asiento ya tiene una reserva confirmada |
+| ⚪ No disponible | El asiento está inhabilitado para ese viaje |
+
+El pasajero puede visualizar la distribución completa del bus y seleccionar un asiento disponible antes de confirmar su reserva.
+
+---
+
+## 🎫 Sistema de Reservas (NUEVO)
+
+El sistema de reservas es el **proceso central de S.M.A.R.T.**
+
+### Flujo de reserva
+
+```
+1. Buscar viaje (origen, destino, fecha)
+       ↓
+2. Seleccionar viaje disponible
+       ↓
+3. Ver distribución de asientos
+       ↓
+4. Seleccionar asiento disponible
+       ↓
+5. Revisar resumen del viaje y precio
+       ↓
+6. Confirmar pago (simulado)
+       ↓
+7. Reserva generada y confirmada
+       ↓
+8. Visualizar comprobante
+```
+
+### Información de una reserva
+
+| Campo | Descripción |
+|---|---|
+| Código de reserva | Identificador único (ej. SMART-000125) |
+| Pasajero | Usuario que realizó la reserva |
+| Viaje | Ruta, fecha y horario |
+| Asiento | Número de asiento seleccionado |
+| Precio | Precio del viaje al momento de reservar |
+| Estado | Estado actual de la reserva |
+| Fecha de reserva | Fecha y hora de la confirmación |
+
+### Estados de una reserva
+
+```
+Pendiente → Confirmada → Completada
+          ↘ Cancelada
+```
+
+### Comprobante de reserva
+
+Una vez confirmada la reserva, el pasajero puede visualizar e imprimir su comprobante:
+
+```
+╔══════════════════════════════╗
+║         S.M.A.R.T.           ║
+║        COMPROBANTE           ║
+╠══════════════════════════════╣
+║ Reserva: SMART-000125        ║
+║ Pasajero: Juan Pérez         ║
+║                              ║
+║ Origen:   Lima               ║
+║ Destino:  Huancayo           ║
+║ Fecha:    15/09/2026         ║
+║ Hora:     08:00              ║
+║ Bus:      ABC-123            ║
+║ Asiento:  08                 ║
+║ Precio:   S/ 35.00           ║
+║                              ║
+║ Estado:   CONFIRMADA ✅      ║
+╚══════════════════════════════╝
+```
+
+### Pago simulado
+
+Para el proyecto académico, el pago se maneja de forma simulada. El flujo muestra el resumen con el precio total y el botón "Confirmar pago", que aprueba automáticamente la transacción y confirma la reserva. Esto permite demostrar el proceso completo sin necesidad de integrar una pasarela de pago real.
 
 ---
 
@@ -141,35 +401,31 @@ El proyecto sigue una **Arquitectura de Monolito Modular en el Frontend** con **
 │  │  Públicas    │  │  Compartidos │  │  • AuthContext          │ │
 │  │  • Home      │  │  • Header    │  │  • NotificationContext  │ │
 │  │  • About     │  │  • Sidebar   │  │                         │ │
-│  │  • Routes    │  │  • Common    │  └─────────────────────────┘ │
-│  │  • Login     │  └──────────────┘                              │
-│  └─────────────┘                                                 │
+│  │  • Login     │  │  • Common    │  └─────────────────────────┘ │
+│  └─────────────┘  └──────────────┘                               │
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │              Módulos Administrativos (Privados)              │ │
 │  │  Dashboard │ Buses │ Drivers │ Trips │ Routes │ Reports     │ │
-│  │  Users │ Roles │ Stops │ Profile                            │ │
+│  │  Users │ Roles │ Stops │ Seats │ Reservations │ Profile     │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 │                              │                                   │
 │  ┌───────────────────────────▼─────────────────────────────────┐ │
 │  │              Capa de Servicios (Service Layer)               │ │
 │  │  busService │ driverService │ routeService │ tripService    │ │
-│  │  stopService │ profileService                               │ │
+│  │  stopService │ seatService │ reservationService │ profile   │ │
 │  └─────────────────────────┬───────────────────────────────────┘ │
 └────────────────────────────┼─────────────────────────────────────┘
                              │ HTTPS (REST API)
 ┌────────────────────────────▼─────────────────────────────────────┐
-│                     SUPABASE (Backend-as-a-Service)               │
+│                    SUPABASE (Backend-as-a-Service)                │
 │                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
-│  │  Auth (JWT)  │  │  PostgreSQL  │  │  Triggers & Functions  │  │
-│  │  • Sign Up   │  │  • profiles  │  │  • handle_new_user()   │  │
-│  │  • Sign In   │  │  • buses     │  │  • update_updated_at() │  │
-│  │  • Sessions  │  │  • drivers   │  │  • audit_changes()     │  │
-│  └──────────────┘  │  • routes    │  └────────────────────────┘  │
-│                    │  • stops     │                               │
-│                    │  • trips     │                               │
-│                    └──────────────┘                               │
+│  ┌──────────────┐  ┌──────────────────────────────────────────┐  │
+│  │  Auth (JWT)  │  │              PostgreSQL                   │  │
+│  │  • Sign Up   │  │  profiles │ buses │ drivers │ routes     │  │
+│  │  • Sign In   │  │  stops │ trips │ seats │ reservations    │  │
+│  │  • Sessions  │  │  payments (opcional)                     │  │
+│  └──────────────┘  └──────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
                              │
 ┌────────────────────────────▼─────────────────────────────────────┐
@@ -207,7 +463,7 @@ El proyecto sigue una **Arquitectura de Monolito Modular en el Frontend** con **
 | Tecnología | Propósito |
 |---|---|
 | **Supabase** | Backend-as-a-Service: Auth, PostgreSQL, API REST auto-generada |
-| **PostgreSQL** | Base de datos relacional en la nube (AWS us-west-2) |
+| **PostgreSQL** | Base de datos relacional en la nube |
 | **Supabase Auth** | Autenticación con JWT, sesiones persistentes y recuperación de contraseña |
 
 ### DevOps & Infraestructura
@@ -217,6 +473,93 @@ El proyecto sigue una **Arquitectura de Monolito Modular en el Frontend** con **
 | **GitHub** | Control de versiones y trigger de despliegue automático |
 | **OxLint** | Linter rápido para análisis estático de código |
 | **Node.js** | Scripts de migración de base de datos (`scripts/migrate.js`) |
+
+---
+
+## 🗄️ Base de Datos
+
+### Esquema Relacional (PostgreSQL en Supabase)
+
+La versión 2.0 extiende el esquema existente con dos nuevas tablas principales: `seats` y `reservations`.
+
+```
+┌──────────────┐     ┌───────────────┐     ┌──────────────┐
+│   profiles   │     │    drivers    │     │    buses     │
+├──────────────┤     ├───────────────┤     ├──────────────┤
+│ id (PK/FK)   │◄────│ user_id (FK)  │     │ id (PK)      │
+│ full_name    │     │ name          │     │ plate        │
+│ email        │     │ license_number│     │ brand        │
+│ role         │     │ license_expiry│     │ model        │
+│ avatar_url   │     │ phone         │     │ year         │
+│ created_at   │     │ status        │     │ capacity     │
+│ updated_at   │     │ created_at    │     │ status       │
+└──────────────┘     └───────────────┘     │ created_at   │
+                                           └──────┬───────┘
+┌──────────────┐     ┌───────────────┐            │
+│    routes    │     │    stops      │     ┌──────▼───────┐
+├──────────────┤     ├───────────────┤     │    seats     │  ← NUEVO
+│ id (PK)      │◄────│ route_id (FK) │     ├──────────────┤
+│ name         │     │ name          │     │ id (PK)      │
+│ origin       │     │ address       │     │ bus_id (FK)  │──► buses
+│ destination  │     │ stop_order    │     │ seat_number  │
+│ distance_km  │     │ created_at    │     │ status       │
+│ duration_min │     └───────────────┘     └──────┬───────┘
+│ status       │                                  │
+│ created_at   │                                  │
+└──────┬───────┘                                  │
+       │                                          │
+┌──────▼───────┐                        ┌─────────▼──────┐
+│    trips     │                        │  reservations  │  ← NUEVO
+├──────────────┤                        ├────────────────┤
+│ id (PK)      │◄───────────────────────│ trip_id (FK)   │
+│ route_id(FK) │──► routes              │ id (PK)        │
+│ bus_id (FK)  │──► buses               │ passenger_id   │──► profiles
+│ driver_id(FK)│──► drivers             │ seat_id (FK)   │──► seats
+│ departure    │                        │ reservation_code│
+│ arrival      │                        │ reservation_date│
+│ price        │                        │ price          │
+│ status       │                        │ status         │
+│ created_at   │                        │ created_at     │
+└──────────────┘                        └────────────────┘
+```
+
+### Nuevas tablas
+
+**`seats`** — Asientos de cada bus:
+```sql
+id            UUID PRIMARY KEY
+bus_id        UUID REFERENCES buses(id)
+seat_number   INTEGER NOT NULL
+status        TEXT DEFAULT 'available'
+```
+
+**`reservations`** — Reservas de pasajeros:
+```sql
+id                UUID PRIMARY KEY
+passenger_id      UUID REFERENCES profiles(id)
+trip_id           UUID REFERENCES trips(id)
+seat_id           UUID REFERENCES seats(id)
+reservation_code  TEXT UNIQUE NOT NULL
+reservation_date  TIMESTAMPTZ DEFAULT NOW()
+price             NUMERIC NOT NULL
+status            TEXT DEFAULT 'pending'
+```
+
+**`payments`** (opcional):
+```sql
+id              UUID PRIMARY KEY
+reservation_id  UUID REFERENCES reservations(id)
+amount          NUMERIC NOT NULL
+payment_method  TEXT
+payment_status  TEXT
+payment_date    TIMESTAMPTZ
+```
+
+### Automatizaciones de la DB:
+- **Trigger `handle_new_user()`**: crea automáticamente un perfil en `profiles` al registrarse.
+- **Trigger `update_updated_at()`**: actualiza el campo `updated_at` en cada modificación.
+- **Función `generate_reservation_code()`**: genera el código único SMART-XXXXXX para cada reserva.
+- **Datos semilla**: buses, conductores, rutas y viajes pre-cargados vía `scripts/migrate.js`.
 
 ---
 
@@ -236,7 +579,6 @@ S.M.A.R.T/
 │   ├── main.tsx                  # Punto de entrada de la aplicación
 │   ├── App.tsx                   # Router central, guards de autenticación y roles
 │   ├── types.ts                  # Modelo de dominio TypeScript
-│   ├── mockData.ts               # Datos de respaldo (legacy)
 │   │
 │   ├── components/               # Componentes UI reutilizables
 │   │   ├── Header.tsx            # Barra de navegación pública
@@ -257,25 +599,32 @@ S.M.A.R.T/
 │   │   ├── routeService.ts       # CRUD de rutas
 │   │   ├── stopService.ts        # CRUD de paraderos
 │   │   ├── tripService.ts        # CRUD de viajes (con JOINs)
+│   │   ├── seatService.ts        # Gestión de asientos por bus/viaje ← NUEVO
+│   │   ├── reservationService.ts # Gestión de reservas de pasajeros  ← NUEVO
 │   │   └── profileService.ts     # Gestión de perfiles de usuario
 │   │
 │   ├── pages/                    # Páginas principales
 │   │   ├── Home.tsx              # Landing page pública
 │   │   ├── About.tsx             # Información del sistema
 │   │   ├── HowItWorks.tsx        # Flujo explicativo
-│   │   ├── RoutesPage.tsx        # Consulta pública de rutas
 │   │   ├── Login.tsx             # Autenticación y registro con roles
 │   │   ├── Dashboard.tsx         # Panel principal (adaptativo por rol)
 │   │   ├── Profile.tsx           # Perfil del usuario actual
 │   │   │
-│   │   └── modules/              # Módulos administrativos privados
+│   │   └── modules/              # Módulos del sistema
 │   │       ├── Buses.tsx         # Gestión de flota
 │   │       ├── Drivers.tsx       # Registro de conductores
+│   │       ├── Routes.tsx        # Gestión de rutas
+│   │       ├── Stops.tsx         # Paraderos y paradas
 │   │       ├── Trips.tsx         # Programación de viajes
+│   │       ├── TripSearch.tsx    # Búsqueda de viajes (pasajero)    ← NUEVO
+│   │       ├── SeatSelector.tsx  # Selector visual de asientos       ← NUEVO
+│   │       ├── Reservations.tsx  # Gestión y consulta de reservas    ← NUEVO
+│   │       ├── MyReservations.tsx # Mis reservas (pasajero)          ← NUEVO
+│   │       ├── Voucher.tsx       # Comprobante de reserva            ← NUEVO
 │   │       ├── Reports.tsx       # Reportes y métricas
 │   │       ├── Users.tsx         # Administración de usuarios
-│   │       ├── Roles.tsx         # Roles y permisos
-│   │       └── Stops.tsx         # Paraderos y paradas
+│   │       └── Roles.tsx         # Roles y permisos
 │   │
 │   └── styles/                   # Sistema de diseño CSS
 │       ├── variables.css         # Paleta de colores, tipografías, tokens
@@ -290,74 +639,58 @@ S.M.A.R.T/
 
 ---
 
-## 🔐 Sistema de Roles y Permisos (RBAC)
+## 📋 Requisitos de Software
 
-S.M.A.R.T implementa un **Control de Acceso Basado en Roles** (Role-Based Access Control) con 4 niveles jerárquicos:
+La nueva versión supera ampliamente el mínimo de **20 requisitos de software** requeridos.
 
-| Rol | Nivel | Acceso |
-|---|---|---|
-| **🔴 Administrador** | Total | Todos los módulos, gestión de usuarios, reportes, configuración |
-| **🟠 Operador** | Gestión | Buses, conductores, rutas, viajes, reportes, paraderos |
-| **🟡 Conductor** | Operativo | Dashboard, rutas, viajes asignados, paraderos, perfil |
-| **🟢 Pasajero** | Consulta | Dashboard simplificado, consulta de rutas, viajes, perfil |
+### Requisitos Funcionales
 
-### Implementación técnica:
-- **Sidebar dinámico**: cada item del menú tiene un array `roles[]` que filtra la visibilidad
-- **Guardia de rutas en App.tsx**: un mapa `roleAccess` verifica el permiso antes de renderizar cada vista
-- **Dashboard adaptativo**: las tarjetas de stats, enlaces rápidos y columnas de tabla se muestran/ocultan según el rol
-- **Registro condicional**: al seleccionar "Conductor" en el formulario de registro, aparecen campos adicionales obligatorios (licencia, vencimiento, teléfono)
+| ID | Requisito |
+|---|---|
+| **RF-01** | El sistema deberá permitir registrar usuarios con selección de rol. |
+| **RF-02** | El sistema deberá permitir iniciar y cerrar sesión de forma segura. |
+| **RF-03** | El sistema deberá permitir recuperar la contraseña por correo. |
+| **RF-04** | El sistema deberá permitir administrar buses (crear, editar, listar). |
+| **RF-05** | El sistema deberá impedir programar viajes con buses fuera de servicio. |
+| **RF-06** | El sistema deberá permitir administrar conductores. |
+| **RF-07** | El sistema deberá verificar disponibilidad de conductor antes de asignarlo. |
+| **RF-08** | El sistema deberá permitir administrar rutas con origen y destino. |
+| **RF-09** | El sistema deberá permitir administrar paraderos vinculados a rutas. |
+| **RF-10** | El sistema deberá permitir programar viajes asignando ruta, bus, conductor y precio. |
+| **RF-11** | El sistema deberá permitir al pasajero buscar viajes por origen, destino y fecha. |
+| **RF-12** | El sistema deberá mostrar los asientos disponibles de un viaje. |
+| **RF-13** | El sistema deberá permitir al pasajero seleccionar un asiento disponible. |
+| **RF-14** | El sistema deberá impedir seleccionar un asiento ya reservado. |
+| **RF-15** | El sistema deberá permitir confirmar una reserva con pago simulado. |
+| **RF-16** | El sistema deberá generar un código único de reserva. |
+| **RF-17** | El sistema deberá permitir al pasajero consultar sus reservas. |
+| **RF-18** | El sistema deberá permitir al pasajero cancelar una reserva. |
+| **RF-19** | El sistema deberá generar un comprobante de reserva visualizable. |
+| **RF-20** | El sistema deberá mostrar reportes de viajes, reservas y utilización de flota. |
+| **RF-21** | El sistema deberá permitir al conductor ver sus viajes asignados y sus pasajeros. |
+| **RF-22** | El sistema deberá permitir cambiar el estado de un viaje. |
 
----
+### Requisitos No Funcionales
 
-## 🗄️ Base de Datos
+| ID | Requisito |
+|---|---|
+| **RNF-01** | **Seguridad**: autenticación con JWT y control de acceso por rol en todas las rutas. |
+| **RNF-02** | **Usabilidad**: diseño responsive accesible desde computador y dispositivos móviles. |
+| **RNF-03** | **Rendimiento**: carga inicial del sistema en menos de 3 segundos. |
+| **RNF-04** | **Disponibilidad**: sistema disponible 24/7 mediante Vercel y Supabase cloud. |
+| **RNF-05** | **Mantenibilidad**: código modularizado con capa de servicios separada de la UI. |
+| **RNF-06** | **Compatibilidad**: compatible con navegadores modernos (Chrome, Firefox, Edge, Safari). |
 
-### Esquema Relacional (PostgreSQL en Supabase)
+### Cumplimiento de requisitos del proyecto académico
 
-```
-┌──────────────┐     ┌───────────────┐     ┌──────────────┐
-│   profiles   │     │    drivers    │     │    buses     │
-├──────────────┤     ├───────────────┤     ├──────────────┤
-│ id (PK/FK)   │◄────│ user_id (FK)  │     │ id (PK)      │
-│ full_name    │     │ name          │     │ plate        │
-│ email        │     │ license_number│     │ brand        │
-│ role         │     │ license_expiry│     │ model        │
-│ avatar_url   │     │ phone         │     │ year         │
-│ created_at   │     │ status        │     │ capacity     │
-│ updated_at   │     │ created_at    │     │ status       │
-└──────────────┘     └───────────────┘     │ created_at   │
-                                           └──────────────┘
-┌──────────────┐     ┌───────────────┐
-│    routes    │     │    stops      │
-├──────────────┤     ├───────────────┤
-│ id (PK)      │◄────│ route_id (FK) │
-│ name         │     │ name          │
-│ origin       │     │ address       │
-│ destination  │     │ stop_order    │
-│ distance_km  │     │ latitude      │
-│ duration_min │     │ longitude     │
-│ status       │     │ created_at    │
-│ created_at   │     └───────────────┘
-└──────┬───────┘
-       │
-┌──────▼───────┐
-│    trips     │
-├──────────────┤
-│ id (PK)      │
-│ route_id(FK) │──► routes
-│ bus_id (FK)  │──► buses
-│ driver_id(FK)│──► drivers
-│ departure    │
-│ arrival      │
-│ status       │
-│ created_at   │
-└──────────────┘
-```
-
-### Automatizaciones de la DB:
-- **Trigger `handle_new_user()`**: crea automáticamente un perfil en `profiles` cuando un usuario se registra en Supabase Auth
-- **Trigger `update_updated_at()`**: actualiza el campo `updated_at` en cada modificación
-- **Función `audit_changes()`**: registra cambios para trazabilidad
-- **Datos semilla**: buses, conductores y rutas pre-cargados vía `scripts/migrate.js`
+| Requisito solicitado          | S.M.A.R.T.                                      |
+| ----------------------------- | ----------------------------------------------- |
+| **20 requisitos de software** | ✅ 22 RF + 6 RNF documentados                   |
+| **Login**                     | ✅ Supabase Auth con JWT                        |
+| **Menú principal**            | ✅ Dashboard adaptativo + Sidebar por rol       |
+| **1 CRUD completo**           | ✅ Buses (+ Conductores, Rutas, Viajes, Reservas) |
+| **1 proceso de negocio**      | ✅ Reserva de viaje (búsqueda → asiento → pago → comprobante) |
+| **1 reporte / consulta**      | ✅ Reportes de viajes, reservas y ocupación de flota |
 
 ---
 
@@ -377,7 +710,7 @@ Developer Push ──► GitHub (main) ──► Vercel Auto-Deploy ──► Pr
 | **Deploy automático** | Cada `git push` a `main` dispara un build en Vercel |
 | **Serverless Functions** | `api/logger.js` — endpoint para centralizar logs del cliente |
 | **URL de producción** | [s-m-a-r-t-six.vercel.app](https://s-m-a-r-t-six.vercel.app) |
-| **Base de datos** | Supabase PostgreSQL (AWS us-west-2) |
+| **Base de datos** | Supabase PostgreSQL en la nube |
 
 ---
 
@@ -403,10 +736,13 @@ npm install
 # VITE_SUPABASE_URL=tu_url_de_supabase
 # VITE_SUPABASE_ANON_KEY=tu_anon_key
 
-# 4. Iniciar servidor de desarrollo
+# 4. Ejecutar migraciones (opcional, para inicializar la DB)
+node scripts/migrate.js
+
+# 5. Iniciar servidor de desarrollo
 npm run dev
 
-# 5. Abrir en el navegador
+# 6. Abrir en el navegador
 # http://localhost:5173
 ```
 
@@ -424,69 +760,35 @@ npm run dev
 
 ## 🗺️ Hoja de Ruta — Roadmap
 
-### 📌 v1.2.0 — Mejoras de UX y Funcionalidad (Próximo)
-- [ ] **CRUD completo de paraderos** con mapa interactivo (geolocalización)
-- [ ] **Edición de perfil** con carga de avatar
+### 📌 v2.0.0 — Sistema de Reservas (En desarrollo)
+- [ ] **Tabla `seats`** con distribución de asientos por bus
+- [ ] **Tabla `reservations`** con código único y estados
+- [ ] **Selector visual de asientos** con disponibilidad en tiempo real
+- [ ] **Flujo de búsqueda y reserva** completo para el pasajero
+- [ ] **Pago simulado** con confirmación automática
+- [ ] **Comprobante de reserva** visualizable e imprimible
+- [ ] **Módulo "Mis Reservas"** para el pasajero
+- [ ] **Vista de pasajeros por viaje** para el conductor
+- [ ] **Reportes ampliados** con ocupación y reservas
+
+### 📌 v2.1.0 — Mejoras de UX
 - [ ] **Filtros avanzados** en tablas (por estado, fecha, ruta)
 - [ ] **Paginación** en listados con muchos registros
+- [ ] **Edición de perfil** con carga de avatar
 - [ ] **Modo claro/oscuro** con toggle
-- [ ] **Notificaciones push** para cambios de estado en viajes
 
-### 📌 v1.3.0 — Tiempo Real y Tracking
-- [ ] **Seguimiento GPS en vivo** de buses en ruta (Supabase Realtime)
-- [ ] **Mapa interactivo** con recorridos de rutas y posición de buses
-- [ ] **ETA (Estimated Time of Arrival)** para paraderos
-- [ ] **Alertas automáticas** cuando un bus se desvía de la ruta o se retrasa
-- [ ] **Panel de conductor** con vista móvil dedicada para iniciar/finalizar viajes
-
-### 📌 v1.4.0 — Calidad de Software y Testing
+### 📌 v2.2.0 — Calidad de Software y Testing
 - [ ] **Pruebas unitarias** con Vitest + React Testing Library
-- [ ] **Pruebas de integración** para flujos de autenticación y RBAC
-- [ ] **Pruebas E2E** con Playwright para flujos críticos
+- [ ] **Pruebas de integración** para flujos de autenticación y reservas
+- [ ] **Pruebas E2E** con Playwright para el flujo completo de reserva
 - [ ] **Pipeline CI/CD** con GitHub Actions (lint + test + build en cada PR)
-- [ ] **Cobertura de código** mínima del 80%
-- [ ] **SonarQube** para análisis de deuda técnica
 
-### 📌 v2.0.0 — Plataforma Empresarial
-- [ ] **API REST propia** (Node.js/Express o .NET) para lógica de negocio compleja
-- [ ] **Row Level Security (RLS)** activada en Supabase para seguridad a nivel de fila
-- [ ] **Multi-tenancy**: soporte para múltiples empresas de transporte
-- [ ] **Sistema de turnos** para conductores con calendario
-- [ ] **Facturación y costos** operacionales por ruta/viaje
-- [ ] **Exportación** de reportes a PDF y Excel
-- [ ] **Aplicación móvil nativa** (React Native) para conductores y pasajeros
-
----
-
-## 🌟 Visión a Largo Plazo
-
-### ¿A dónde queremos llegar?
-
-S.M.A.R.T aspira a convertirse en una **plataforma SaaS (Software as a Service)** completa para la gestión inteligente de transporte corporativo, capaz de:
-
-1. **🏢 Servir a múltiples empresas** — Cada organización con su propia instancia configurada, con branding personalizado y gestión independiente de flota.
-
-2. **📱 Experiencia multiplataforma** — Panel web para administradores y operadores, aplicación móvil nativa para conductores (iniciar viajes, reportar incidencias) y pasajeros (consultar horarios, ver ETA en tiempo real).
-
-3. **🤖 Inteligencia artificial operativa** — Algoritmos de optimización para:
-   - Asignación automática del mejor bus/conductor según disponibilidad, distancia y carga
-   - Predicción de demanda por ruta y horario
-   - Detección de anomalías (retrasos, desvíos, sobreuso de vehículos)
-
-4. **📊 Business Intelligence** — Dashboards avanzados con:
-   - Análisis de costos operativos por kilómetro
-   - Índice de puntualidad por conductor y ruta
-   - Proyecciones de mantención preventiva de flota
-   - Reportes automáticos para gerencia
-
-5. **🔗 Integraciones empresariales** — Conexión con sistemas de:
-   - ERP corporativos
-   - Sistemas de nómina (para horas trabajadas de conductores)
-   - APIs de tráfico y clima para ajustar rutas dinámicamente
-   - Plataformas de pago para pasajes electrónicos
-
-### Nuestra meta final:
-> Transformar S.M.A.R.T de un proyecto académico a una herramienta de gestión de transporte con impacto real, donde cada kilómetro recorrido esté optimizado, cada conductor asignado de forma inteligente y cada pasajero informado en tiempo real.
+### 📌 v3.0.0 — Plataforma Completa
+- [ ] **Pasarela de pago real** (Stripe, Mercado Pago o similar)
+- [ ] **Notificaciones por correo** al confirmar o cancelar una reserva
+- [ ] **Row Level Security (RLS)** activada en Supabase
+- [ ] **Exportación de reportes** a PDF y Excel
+- [ ] **Aplicación móvil** (React Native) para conductores y pasajeros
 
 ---
 
@@ -502,23 +804,31 @@ S.M.A.R.T aspira a convertirse en una **plataforma SaaS (Software as a Service)*
 
 ### Competencias aplicadas:
 - ✅ Desarrollo web moderno con React + TypeScript
-- ✅ Arquitectura de software basada en componentes
+- ✅ Arquitectura de software basada en componentes y capa de servicios
 - ✅ Integración con servicios cloud (Supabase, Vercel)
 - ✅ Control de versiones con Git y GitHub
-- ✅ Despliegue continuo automatizado
+- ✅ Despliegue continuo automatizado (CI/CD)
 - ✅ Diseño de base de datos relacional
 - ✅ Control de acceso basado en roles (RBAC)
+- ✅ Modelado de procesos de negocio (reserva de viajes)
 - ✅ Diseño UX/UI con sistema de diseño coherente
 
 ---
 
 ## 📦 Historial de Versiones
 
-### v1.1.0 (Actual)
+### v2.0.0 (En desarrollo)
+- 🔄 Nuevo modelo de negocio: transporte privado de pasajeros con reserva de asientos
+- 🔄 Nuevas tablas: `seats` y `reservations`
+- 🔄 Módulo de búsqueda de viajes para el pasajero
+- 🔄 Selector visual de asientos con disponibilidad en tiempo real
+- 🔄 Flujo completo de reserva: búsqueda → asiento → pago simulado → comprobante
+- 🔄 Reportes ampliados con ocupación y estadísticas de reservas
+
+### v1.1.0
 - ✅ Registro de cuentas con selección de rol y campos dinámicos para conductor
 - ✅ Control de acceso por rol en Dashboard, Sidebar y guards de navegación
 - ✅ Migración completa de alertas nativas a modales estilizados (NotificationContext)
-- ✅ Estilo premium para selects dropdown
 - ✅ Serverless Function para logs centralizados en Vercel
 
 ### v1.0.0
@@ -531,9 +841,8 @@ S.M.A.R.T aspira a convertirse en una **plataforma SaaS (Software as a Service)*
 
 ### v0.1.0
 - ✅ Estructura base del proyecto con React + TypeScript + Vite
-- ✅ Portal público con landing page, about y rutas
+- ✅ Portal público con landing page y sección de rutas
 - ✅ Panel administrativo con todos los módulos de UI
-- ✅ Datos mock para prototipado visual
 - ✅ Sistema de diseño Cyberpunk/Glassmorphism
 
 ---
