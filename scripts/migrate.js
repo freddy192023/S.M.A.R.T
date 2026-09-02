@@ -132,19 +132,14 @@ CREATE TABLE IF NOT EXISTS public.reservations (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 9. Tabla de logs de auditoría
-CREATE TABLE IF NOT EXISTS public.audit_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  action TEXT NOT NULL,
-  table_name TEXT NOT NULL,
-  record_id UUID,
-  old_data JSONB,
-  new_data JSONB,
-  ip_address TEXT,
-  user_agent TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Asegurar que las columnas nuevas existan si la tabla ya había sido creada
+ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS price NUMERIC(10,2) DEFAULT 35.00;
+ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS max_passengers INTEGER DEFAULT 40;
+ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS actual_passengers INTEGER DEFAULT 0;
+
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS price NUMERIC(10,2) DEFAULT 35.00;
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'Tarjeta Simulación';
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'approved';
 
 -- 8. Tabla de consentimientos
 CREATE TABLE IF NOT EXISTS public.user_consents (
@@ -317,6 +312,22 @@ INSERT INTO public.routes (name, origin, destination, distance_km, estimated_dur
   ('Ruta Oriente', 'Providencia', 'Las Condes', 12.7, 30),
   ('Ruta Poniente', 'Santiago Centro', 'Cerro Navia', 15.2, 40)
 ON CONFLICT DO NOTHING;
+
+-- Insertar viajes activos para las rutas existentes con buses y choferes
+INSERT INTO public.trips (route_id, bus_id, driver_id, departure_time, arrival_time, price, status, max_passengers)
+SELECT 
+  r.id as route_id,
+  b.id as bus_id,
+  d.id as driver_id,
+  NOW() + (interval '1 hour' * (row_number() over (order by r.id))) as departure_time,
+  NOW() + (interval '1 hour' * (row_number() over (order by r.id))) + (interval '45 minutes') as arrival_time,
+  35.00 as price,
+  'programado' as status,
+  b.capacity as max_passengers
+FROM public.routes r
+CROSS JOIN LATERAL (SELECT id, capacity FROM public.buses LIMIT 1) b
+CROSS JOIN LATERAL (SELECT id FROM public.drivers LIMIT 1) d
+WHERE NOT EXISTS (SELECT 1 FROM public.trips);
 `;
 
 async function runMigration() {

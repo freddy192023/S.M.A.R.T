@@ -116,10 +116,48 @@ export const reservationService = {
     passenger_phone?: string;
   }): Promise<Reservation> => {
     const code = generateReservationCode();
+    let finalTripId = reservationData.trip_id;
+
+    // Si el viaje es virtual, asegurar que exista un registro real en Supabase con UUID válido
+    if (finalTripId.startsWith('gen-trip-')) {
+      try {
+        const tripDetails = await tripService.getById(reservationData.trip_id);
+        if (tripDetails && tripDetails.route_id) {
+          const { data: existingTrips } = await supabase
+            .from('trips')
+            .select('id')
+            .eq('route_id', tripDetails.route_id)
+            .limit(1);
+
+          if (existingTrips && existingTrips.length > 0) {
+            finalTripId = existingTrips[0].id;
+          } else {
+            const { data: createdTrip } = await supabase
+              .from('trips')
+              .insert({
+                route_id: tripDetails.route_id,
+                departure_time: tripDetails.departure_time || new Date().toISOString(),
+                price: tripDetails.price || 35.00,
+                status: 'programado',
+                max_passengers: tripDetails.bus_capacity || 40
+              })
+              .select('id')
+              .single();
+
+            if (createdTrip) {
+              finalTripId = createdTrip.id;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Error resolviendo trip_id real en Supabase:', err);
+      }
+    }
+
     const newReservation: Reservation = {
       id: crypto.randomUUID ? crypto.randomUUID() : `res-${Date.now()}`,
       passenger_id: reservationData.passenger_id,
-      trip_id: reservationData.trip_id,
+      trip_id: finalTripId,
       seat_number: reservationData.seat_number,
       reservation_code: code,
       reservation_date: new Date().toISOString(),
@@ -132,7 +170,7 @@ export const reservationService = {
       passenger_phone: reservationData.passenger_phone
     };
 
-    // Intentar guardar en Supabase
+    // 1. Guardar en Supabase para que TODOS los usuarios lo vean
     try {
       const { data, error } = await supabase
         .from('reservations')
@@ -143,23 +181,30 @@ export const reservationService = {
           reservation_code: newReservation.reservation_code,
           reservation_date: newReservation.reservation_date,
           price: newReservation.price,
-          status: newReservation.status,
+          status: 'confirmed',
           payment_method: newReservation.payment_method,
-          payment_status: newReservation.payment_status
+          payment_status: 'approved'
         })
         .select()
         .single();
 
       if (!error && data) {
         newReservation.id = data.id;
+      } else if (error) {
+        console.warn('Advertencia insertando reserva en Supabase:', error);
       }
     } catch (e) {
       console.warn('Supabase no disponible para reservations, guardando localmente:', e);
     }
 
-    // Siempre guardar/actualizar en local storage para resiliencia offline e instantánea
+    // 2. Guardar en almacenamiento local como respaldo
     const local = getLocalReservations();
-    saveLocalReservations([newReservation, ...local]);
+    // Guardar con ambos IDs (virtual y real) para máxima compatibilidad
+    saveLocalReservations([
+      newReservation,
+      { ...newReservation, trip_id: reservationData.trip_id },
+      ...local
+    ]);
 
     // Asociar datos del viaje
     const trip = await tripService.getById(reservationData.trip_id);
