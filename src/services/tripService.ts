@@ -43,21 +43,36 @@ export const tripService = {
     let allReservations: any[] = [];
 
     try {
-      // Importante: usar el mismo servicio de reservas que seatService para consistencia 1:1
-      const { reservationService } = await import('./reservationService');
-      
       const [rData, bData, dData, resData] = await Promise.all([
         routeService.getAll(),
         busService.getAll(),
         driverService.getAll(),
-        reservationService.getAll()
+        supabase.from('reservations')
+          .select('trip_id, seat_number, status, trip:trips(route_id)')
+          .eq('status', 'confirmed')
       ]);
       routes = (rData || []).filter((r: any) => r.status !== 'inactiva');
       buses = (bData || []).filter((b: any) => b.status === 'disponible' || b.status === 'Activo' || b.status === 'activo');
       drivers = (dData || []).filter((d: any) => d.status === 'activo' || d.status === 'Activo' || d.status === 'en_viaje');
-      allReservations = (resData || []).filter(r => r.status === 'confirmed');
+      allReservations = resData.data || [];
     } catch (e) {
       console.warn('Error obteniendo datos complementarios:', e);
+    }
+
+    // Leer también reservas locales que puedan estar pendientes
+    try {
+      const saved = localStorage.getItem('smart_reservations_data');
+      if (saved) {
+        const local = JSON.parse(saved);
+        const activeLocal = local.filter((r: any) => r.status === 'confirmed');
+        activeLocal.forEach((lr: any) => {
+          if (!allReservations.some(cr => cr.trip_id === lr.trip_id && cr.seat_number === lr.seat_number)) {
+            allReservations.push(lr);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Error leyendo reservas locales en tripService:', e);
     }
 
     const mappedDbTrips = dbTrips.map((trip: any) => {
