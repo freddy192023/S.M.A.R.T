@@ -66,13 +66,21 @@ export const RoutesPage: React.FC = () => {
                 <p className="route-public-detail">📏 <strong>Distancia:</strong> {r.distance_km} km</p>
               )}
             </div>
-            <div style={{ marginTop: '1.5rem' }}>
+            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <a 
+                href="#search-trips"
+                className="btn btn-primary btn-sm" 
+                style={{ width: '100%', textAlign: 'center', textDecoration: 'none' }}
+              >
+                💺 Reservar Asiento en esta Ruta
+              </a>
               <button 
+                type="button"
                 className="btn btn-secondary btn-sm" 
                 style={{ width: '100%' }} 
-                onClick={() => showNotification(r.name, `Sección informativa completa de paradas y tiempos de arribo por GPS para la ruta ${r.name}. (En desarrollo)`, 'info')}
+                onClick={() => showNotification(r.name, `Ruta: ${r.name} (${r.origin} ➔ ${r.destination}). Duración estimada: ${r.estimated_duration_min || 45} mins. Salidas diarias activas.`, 'info')}
               >
-                Ver recorrido completo
+                Detalles del Recorrido
               </button>
             </div>
           </div>

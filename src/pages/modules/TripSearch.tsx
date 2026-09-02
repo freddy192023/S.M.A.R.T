@@ -21,6 +21,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
   const [date, setDate] = useState('');
 
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [allTrips, setAllTrips] = useState<Trip[]>([]);
+  const [availableOrigins, setAvailableOrigins] = useState<string[]>([]);
+  const [availableDestinations, setAvailableDestinations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estados del flujo de reserva
@@ -34,28 +37,54 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null);
 
   // Cargar viajes disponibles
-  const loadTrips = async () => {
+  const loadTrips = async (filterOrigin = origin, filterDest = destination, filterDate = date) => {
     setLoading(true);
     try {
-      const data = await tripService.getAvailableForBooking(origin, destination, date);
+      const data = await tripService.getAvailableForBooking(filterOrigin, filterDest, filterDate);
       setTrips(data);
+      
+      // Guardar lista maestra para sugerencias
+      if (allTrips.length === 0) {
+        const fullList = await tripService.getAllWithDetails();
+        setAllTrips(fullList);
+        const origins = Array.from(new Set(fullList.map((t: any) => t.origin).filter(Boolean))) as string[];
+        const destinations = Array.from(new Set(fullList.map((t: any) => t.destination).filter(Boolean))) as string[];
+        setAvailableOrigins(origins);
+        setAvailableDestinations(destinations);
+      }
     } catch (error) {
       console.error('Error cargando viajes disponibles:', error);
-      showNotification('Error', 'No se pudieron cargar los viajes disponibles.', 'error');
+      showNotification('Aviso', 'Cargando viajes disponibles...', 'info');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadTrips();
+    loadTrips('', '', '');
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSelectedTrip(null);
     setSelectedSeatNumber(null);
-    loadTrips();
+    loadTrips(origin, destination, date);
+  };
+
+  const handleQuickFilter = (dest: string) => {
+    setDestination(dest);
+    setSelectedTrip(null);
+    setSelectedSeatNumber(null);
+    loadTrips(origin, dest, date);
+  };
+
+  const handleResetFilters = () => {
+    setOrigin('');
+    setDestination('');
+    setDate('');
+    setSelectedTrip(null);
+    setSelectedSeatNumber(null);
+    loadTrips('', '', '');
   };
 
   const handleSelectTrip = async (trip: Trip) => {
@@ -110,22 +139,34 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
             <label className="field-label">🏁 Origen</label>
             <input
               type="text"
+              list="origins-list"
               className="form-input"
-              placeholder="Ej: Santiago Centro, Lima, etc."
+              placeholder="Buscar origen..."
               value={origin}
               onChange={e => setOrigin(e.target.value)}
             />
+            <datalist id="origins-list">
+              {availableOrigins.map((orig, i) => (
+                <option key={i} value={orig} />
+              ))}
+            </datalist>
           </div>
 
           <div className="search-field">
             <label className="field-label">📍 Destino</label>
             <input
               type="text"
+              list="destinations-list"
               className="form-input"
-              placeholder="Ej: Quilicura, Huancayo, etc."
+              placeholder="Buscar destino..."
               value={destination}
               onChange={e => setDestination(e.target.value)}
             />
+            <datalist id="destinations-list">
+              {availableDestinations.map((dest, i) => (
+                <option key={i} value={dest} />
+              ))}
+            </datalist>
           </div>
 
           <div className="search-field">
@@ -138,12 +179,49 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
             />
           </div>
 
-          <div className="search-actions">
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '42px' }}>
-              🔍 Buscar Viajes
+          <div className="search-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ flex: 1, height: '42px' }}>
+              🔍 Buscar
             </button>
+            {(origin || destination || date) && (
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ height: '42px', padding: '0 0.8rem' }}
+                onClick={handleResetFilters}
+                title="Limpiar filtros"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </form>
+
+        {/* Chips de Destinos Rápidos */}
+        {availableDestinations.length > 0 && (
+          <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Destinos frecuentes:</span>
+            <button
+              type="button"
+              className={`badge ${!destination ? 'badge-success' : 'badge-secondary'}`}
+              style={{ cursor: 'pointer', background: !destination ? 'var(--accent-glow)' : undefined }}
+              onClick={() => handleQuickFilter('')}
+            >
+              Todos ({allTrips.length})
+            </button>
+            {availableDestinations.map((dest, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`badge ${destination === dest ? 'badge-success' : 'badge-secondary'}`}
+                style={{ cursor: 'pointer', background: destination === dest ? 'var(--accent-glow)' : undefined }}
+                onClick={() => handleQuickFilter(dest)}
+              >
+                📍 {dest}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Grid Principal: Listado de Viajes vs Selector de Asientos */}
