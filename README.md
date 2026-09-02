@@ -672,20 +672,24 @@ La nueva versión supera ampliamente el mínimo de **20 requisitos de software**
 
 ### Requisitos No Funcionales
 
-| ID | Requisito |
-|---|---|
-| **RNF-01** | **Seguridad**: autenticación con JWT y control de acceso por rol en todas las rutas. |
-| **RNF-02** | **Usabilidad**: diseño responsive accesible desde computador y dispositivos móviles. |
-| **RNF-03** | **Rendimiento**: carga inicial del sistema en menos de 3 segundos. |
-| **RNF-04** | **Disponibilidad**: sistema disponible 24/7 mediante Vercel y Supabase cloud. |
-| **RNF-05** | **Mantenibilidad**: código modularizado con capa de servicios separada de la UI. |
-| **RNF-06** | **Compatibilidad**: compatible con navegadores modernos (Chrome, Firefox, Edge, Safari). |
+| ID | Requisito | Descripción |
+|---|---|---|
+| **RNF-01** | **Seguridad** | Autenticación basada en Supabase Auth (JWT) y control de acceso por roles (RBAC) en todas las vistas y APIs. |
+| **RNF-02** | **Usabilidad** | Diseño web responsivo e intuitivo, adaptable a pantallas de escritorio, tablets y dispositivos móviles con paleta de colores accesibles. |
+| **RNF-03** | **Rendimiento** | Tiempo de carga inicial del portal web inferior a 3 segundos y respuestas de consultas de viajes en menos de 500ms. |
+| **RNF-04** | **Disponibilidad** | Arquitectura cloud con disponibilidad 99.9% 24/7 mediante infraestructura global en Vercel y Supabase. |
+| **RNF-05** | **Mantenibilidad** | Código modularizado en TypeScript con arquitectura por capas (UI, Services, Context, Lib) facil de mantener y extender. |
+| **RNF-06** | **Compatibilidad** | Compatibilidad nativa con los principales navegadores modernos (Google Chrome, Mozilla Firefox, Microsoft Edge y Safari). |
+| **RNF-07** | **Escalabilidad** | Capacidad de incorporar cientos de rutas, vehículos y usuarios concurrentes sin degradar la respuesta del servidor. |
+| **RNF-08** | **Resiliencia y Persistencia** | Sistema de almacenamiento local de respaldo (`localStorage`) para preservar la sesión y prevenir pérdida de datos ante desconexiones. |
+| **RNF-09** | **Integridad de Datos** | Validaciones y restricciones a nivel de base de datos PostgreSQL (Foreign Keys, Triggers y Uniques) para evitar duplicidad o reservas conflictivas. |
+| **RNF-10** | **Trazabilidad y Observabilidad** | Sistema de registro centralizado de eventos y errores (`vercelLogger`) para monitoreo técnico y auditoría del sistema. |
 
 ### Cumplimiento de requisitos del proyecto académico
 
 | Requisito solicitado          | S.M.A.R.T.                                      |
 | ----------------------------- | ----------------------------------------------- |
-| **20 requisitos de software** | ✅ 22 RF + 6 RNF documentados                   |
+| **20 requisitos de software** | ✅ 22 RF + 10 RNF documentados (32 en total)    |
 | **Login**                     | ✅ Supabase Auth con JWT                        |
 | **Menú principal**            | ✅ Dashboard adaptativo + Sidebar por rol       |
 | **1 CRUD completo**           | ✅ Buses (+ Conductores, Rutas, Viajes, Reservas) |
