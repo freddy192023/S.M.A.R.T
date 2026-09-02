@@ -114,6 +114,19 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
         trip.price || 35.00
       );
       setSeats(tripSeats);
+
+      // Calcular asientos libres reales basados en la matriz de asientos
+      const freeSeatsCount = tripSeats.filter(s => s.status === 'available').length;
+      const occupiedSeatsCount = tripSeats.filter(s => s.status === 'reserved').length;
+      
+      const updated = {
+        ...trip,
+        available_seats: freeSeatsCount,
+        actual_passengers: occupiedSeatsCount
+      };
+
+      setSelectedTrip(updated);
+      setTrips(prev => prev.map(t => t.id === trip.id ? updated : t));
     } catch (err) {
       console.error('Error cargando asientos:', err);
     } finally {
@@ -351,6 +364,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
                   <span className="mini-label">Viaje Seleccionado:</span>
                   <h4>{selectedTrip.route}</h4>
                   <p>{selectedTrip.date} a las {selectedTrip.time}</p>
+                  <span className="badge badge-success" style={{ marginTop: '0.4rem', display: 'inline-block' }}>
+                    💺 {selectedTrip.available_seats} libres de {selectedTrip.bus_capacity || 40}
+                  </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span className="mini-price">S/ {(selectedTrip.price || 35.00).toFixed(2)}</span>
