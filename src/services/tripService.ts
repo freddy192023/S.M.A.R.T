@@ -36,49 +36,34 @@ export const tripService = {
       console.warn('Error consultando tabla trips de Supabase, recurriendo a rutas activas:', e);
     }
 
-    // Obtener todas las rutas, buses, conductores y reservas confirmadas registradas en el sistema
+    // Obtener todas las rutas, buses, conductores y reservas registradas en el sistema
     let routes: any[] = [];
     let buses: any[] = [];
     let drivers: any[] = [];
-    let confirmedReservations: any[] = [];
+    let allReservations: any[] = [];
 
     try {
+      // Importante: usar el mismo servicio de reservas que seatService para consistencia 1:1
+      const { reservationService } = await import('./reservationService');
+      
       const [rData, bData, dData, resData] = await Promise.all([
         routeService.getAll(),
         busService.getAll(),
         driverService.getAll(),
-        supabase.from('reservations').select('trip_id, seat_number, status').eq('status', 'confirmed')
+        reservationService.getAll()
       ]);
       routes = (rData || []).filter((r: any) => r.status !== 'inactiva');
       buses = (bData || []).filter((b: any) => b.status === 'disponible' || b.status === 'Activo' || b.status === 'activo');
       drivers = (dData || []).filter((d: any) => d.status === 'activo' || d.status === 'Activo' || d.status === 'en_viaje');
-      if (resData && resData.data) {
-        confirmedReservations = resData.data;
-      }
+      allReservations = (resData || []).filter(r => r.status === 'confirmed');
     } catch (e) {
       console.warn('Error obteniendo datos complementarios:', e);
     }
 
-    // Leer también reservas de localStorage para respaldo offline/inmediato
-    try {
-      const saved = localStorage.getItem('smart_reservations_data');
-      if (saved) {
-        const local = JSON.parse(saved);
-        const activeLocal = local.filter((r: any) => r.status === 'confirmed');
-        activeLocal.forEach((lr: any) => {
-          if (!confirmedReservations.some(cr => cr.trip_id === lr.trip_id && cr.seat_number === lr.seat_number)) {
-            confirmedReservations.push(lr);
-          }
-        });
-      }
-    } catch (e) {
-      console.warn('Error leyendo reservas locales en tripService:', e);
-    }
-
     const mappedDbTrips = dbTrips.map((trip: any) => {
       const busCapacity = trip.buses?.capacity || trip.max_passengers || 40;
-      const bookedCount = confirmedReservations.filter((r: any) => 
-        r.trip_id === trip.id || (trip.route_id && r.trip_id === trip.route_id)
+      const bookedCount = allReservations.filter((r: any) => 
+        r.trip_id === trip.id || (trip.route_id && r.trip?.route_id === trip.route_id)
       ).length;
       const basePrice = Number(trip.price) || 35.00;
 
@@ -133,8 +118,10 @@ export const tripService = {
           const tripId = `gen-trip-${route.id || rIdx}-${dIdx}`;
 
           // Contar reservas confirmadas para este viaje o ruta
-          const bookedCount = confirmedReservations.filter((r: any) => 
-            r.trip_id === tripId || r.trip_id === route.id
+          const bookedCount = allReservations.filter((r: any) => 
+            r.trip_id === tripId || 
+            (route.id && r.trip?.route_id === route.id) ||
+            r.trip_id === route.id
           ).length;
 
           generatedTrips.push({

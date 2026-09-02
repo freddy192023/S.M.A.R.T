@@ -43,21 +43,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
     try {
       const data = await tripService.getAvailableForBooking(filterOrigin, filterDest, filterDate);
       
-      // Obtener reservas activas para calcular disponibilidad real de cada tarjeta
-      const allReservations = await reservationService.getAll();
-      const activeRes = allReservations.filter(r => r.status === 'confirmed');
-
-      const updatedTrips = data.map(t => {
-        const bookedCount = activeRes.filter(r => r.trip_id === t.id || (t.route_id && r.trip?.route_id === t.route_id)).length;
-        const cap = t.bus_capacity || 40;
-        return {
-          ...t,
-          actual_passengers: bookedCount,
-          available_seats: Math.max(0, cap - bookedCount)
-        };
-      });
-
-      setTrips(updatedTrips);
+      setTrips(data);
       
       // Guardar lista maestra para sugerencias
       if (allTrips.length === 0) {
