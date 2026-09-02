@@ -6,7 +6,7 @@
 ![Stack](https://img.shields.io/badge/React_19-TypeScript_6-3178c6?style=for-the-badge&labelColor=0a0e1a)
 ![Backend](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=for-the-badge&labelColor=0a0e1a)
 ![Deploy](https://img.shields.io/badge/Vercel-Producción-000000?style=for-the-badge&labelColor=0a0e1a)
-![License](https://img.shields.io/badge/Licencia-Académica-ff6b6b?style=for-the-badge&labelColor=0a0e1a)
+![License](https://img.shields.io/badge/Licencia-MIT-green?style=for-the-badge&labelColor=0a0e1a)
 
 **Plataforma inteligente de gestión y reserva de transporte privado de pasajeros**
 
@@ -32,7 +32,7 @@
 - [Requisitos de Software](#-requisitos-de-software)
 - [Cómo Ejecutar Localmente](#-cómo-ejecutar-localmente)
 - [Hoja de Ruta](#-hoja-de-ruta--roadmap)
-- [Equipo y Contexto Académico](#-equipo-y-contexto-académico)
+- [Información del Proyecto](#-información-del-proyecto)
 - [Historial de Versiones](#-historial-de-versiones)
 
 ---
@@ -45,7 +45,7 @@ El sistema permite a la empresa administrar sus **buses, conductores, rutas, par
 
 La plataforma centraliza toda la operación de la empresa y entrega al pasajero una experiencia completamente digital para consultar disponibilidad y reservar su viaje.
 
-> 🎓 Este proyecto fue desarrollado como prototipo funcional para la asignatura de **Técnicas de Calidad de Software**, aplicando buenas prácticas de desarrollo web, modularización, tipado seguro y arquitectura escalable.
+> 🚀 **S.M.A.R.T.** está diseñado bajo una arquitectura moderna de software, aplicando buenas prácticas de desarrollo web, modularización, tipado seguro con TypeScript y arquitectura cloud altamente escalable.
 
 ---
 
@@ -796,26 +796,26 @@ npm run dev
 
 ---
 
-## 🎓 Equipo y Contexto Académico
+## ℹ️ Información del Proyecto
 
 | Campo | Detalle |
 |---|---|
-| **Asignatura** | Técnicas de Calidad de Software |
-| **Institución** | Universidad |
-| **Año** | 2026 |
-| **Tipo de proyecto** | Prototipo funcional con base de datos real |
-| **Metodología** | Desarrollo iterativo con entregas incrementales |
+| **Plataforma** | Sistema Web para Gestión de Transporte Privado |
+| **Versión** | 2.0.0 |
+| **Arquitectura** | Frontend SPA (React 19) + Cloud Backend (Supabase PostgreSQL) |
+| **Tipo de despliegue** | CI/CD Automático en Vercel |
+| **Metodología** | Desarrollo Ágil e Incremental |
 
-### Competencias aplicadas:
+### Capacidades del sistema:
 - ✅ Desarrollo web moderno con React + TypeScript
 - ✅ Arquitectura de software basada en componentes y capa de servicios
 - ✅ Integración con servicios cloud (Supabase, Vercel)
 - ✅ Control de versiones con Git y GitHub
 - ✅ Despliegue continuo automatizado (CI/CD)
-- ✅ Diseño de base de datos relacional
+- ✅ Diseño de base de datos relacional PostgreSQL
 - ✅ Control de acceso basado en roles (RBAC)
 - ✅ Modelado de procesos de negocio (reserva de viajes)
-- ✅ Diseño UX/UI con sistema de diseño coherente
+- ✅ Diseño UX/UI con sistema de diseño moderno
 
 ---
 
@@ -855,6 +855,6 @@ npm run dev
 
 **S.M.A.R.T** — Smart Mobility & Administration Resource Technology
 
-Hecho con 💚 para la asignatura de Técnicas de Calidad de Software · 2026
+Desarrollado con 💚 por el equipo de S.M.A.R.T · 2026
 
 </div>
