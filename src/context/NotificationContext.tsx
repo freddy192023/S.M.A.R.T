@@ -4,7 +4,7 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'danger';
+  type: 'info' | 'success' | 'warning' | 'danger' | 'error';
 }
 
 interface NotificationContextType {
@@ -49,7 +49,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             border: `1px solid ${
               notification.type === 'success' ? 'var(--success-color)' :
               notification.type === 'warning' ? 'var(--warning-color)' :
-              notification.type === 'danger' ? 'var(--danger-color)' :
+              (notification.type === 'danger' || notification.type === 'error') ? 'var(--danger-color)' :
               'var(--accent-color)'
             }`,
             boxShadow: 'var(--shadow-lg), 0 0 30px rgba(0, 0, 0, 0.5)',
@@ -71,7 +71,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }}>
               {notification.type === 'success' ? '✅' :
                notification.type === 'warning' ? '⚠️' :
-               notification.type === 'danger' ? '❌' : 'ℹ️'}
+               (notification.type === 'danger' || notification.type === 'error') ? '❌' : 'ℹ️'}
             </div>
 
             <h3 style={{
@@ -102,13 +102,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 boxShadow: `0 4px 14px ${
                   notification.type === 'success' ? 'rgba(16, 185, 129, 0.2)' :
                   notification.type === 'warning' ? 'rgba(245, 158, 11, 0.2)' :
-                  notification.type === 'danger' ? 'rgba(239, 68, 68, 0.2)' :
+                  (notification.type === 'danger' || notification.type === 'error') ? 'rgba(239, 68, 68, 0.2)' :
                   'var(--accent-glow)'
                 }`,
                 background:
                   notification.type === 'success' ? 'var(--success-color)' :
                   notification.type === 'warning' ? 'var(--warning-color)' :
-                  notification.type === 'danger' ? 'var(--danger-color)' :
+                  (notification.type === 'danger' || notification.type === 'error') ? 'var(--danger-color)' :
                   'var(--accent-color)',
                 color: 'var(--bg-primary)'
               }}

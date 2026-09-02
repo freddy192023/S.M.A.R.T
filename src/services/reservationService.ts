@@ -170,14 +170,11 @@ export const reservationService = {
 
   // Cancelar una reserva
   cancel: async (reservationId: string): Promise<boolean> => {
-    let success = false;
     try {
-      const { error } = await supabase
+      await supabase
         .from('reservations')
         .update({ status: 'cancelled' })
         .eq('id', reservationId);
-
-      if (!error) success = true;
     } catch (e) {
       console.warn('Error cancelando en Supabase:', e);
     }
