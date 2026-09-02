@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import type { Trip, Seat, Reservation } from '../../types';
 import { tripService } from '../../services/tripService';
 import { seatService } from '../../services/seatService';
-import { reservationService } from '../../services/reservationService';
 import { SeatSelector } from '../../components/SeatSelector';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { VoucherModal } from '../../components/VoucherModal';
