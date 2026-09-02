@@ -10,54 +10,54 @@ export const Home: React.FC<HomeProps> = ({ setActiveView, currentUser }) => {
   return (
     <>
       <section className="hero-section">
-        <span className="hero-tag">Transporte Inteligente</span>
-        <h1 className="hero-title">Gestiona tu transporte de forma <span>inteligente.</span></h1>
-        <p className="hero-subtitle">S.M.A.R.T centraliza la administración, control y consulta de las operaciones de transporte en una sola plataforma corporativa.</p>
+        <span className="hero-tag">Transporte Privado Inteligente</span>
+        <h1 className="hero-title">Reserva tu viaje y viaja de forma <span>inteligente.</span></h1>
+        <p className="hero-subtitle">S.M.A.R.T es la plataforma integral para consultar salidas disponibles, seleccionar tu asiento en el bus y gestionar tus viajes en tiempo real.</p>
         <div className="hero-buttons">
-          <a href="#routes" className="btn btn-primary" onClick={() => setActiveView('routes')}>Explorar rutas</a>
+          <a href="#routes" className="btn btn-primary" onClick={() => setActiveView('routes')}>Explorar Rutas</a>
           {currentUser ? (
-            <a href="#dashboard" className="btn btn-secondary" onClick={() => setActiveView('dashboard')}>Ir a Dashboard</a>
+            <a href="#search-trips" className="btn btn-secondary" onClick={() => setActiveView('search-trips')}>🔍 Buscar y Reservar</a>
           ) : (
-            <a href="#login" className="btn btn-secondary" onClick={() => setActiveView('login')}>Iniciar sesión</a>
+            <a href="#login" className="btn btn-secondary" onClick={() => setActiveView('login')}>Iniciar Sesión / Registro</a>
           )}
         </div>
       </section>
 
       <section className="section-container">
         <div className="section-header">
-          <h2>Características Principales</h2>
-          <p>La solución integral para resolver los desafíos de logística y transporte en tiempo real.</p>
+          <h2>Experiencia Completa para Pasajeros y Empresas</h2>
+          <p>Un ecosistema digital moderno que une la gestión de flota con la reserva de asientos en tiempo real.</p>
         </div>
         <div className="features-grid">
           <div className="feature-card">
-            <span className="feature-icon">🚌</span>
-            <h3>Gestión de Buses</h3>
-            <p>Administración y control detallado de los vehículos disponibles en la flota corporativa.</p>
+            <span className="feature-icon">🔍</span>
+            <h3>Búsqueda de Viajes</h3>
+            <p>Consulta itinerarios por origen, destino y fecha con tarifas y horarios transparentes.</p>
           </div>
           <div className="feature-card">
-            <span className="feature-icon">🗺️</span>
-            <h3>Gestión de Rutas</h3>
-            <p>Creación, consulta y organización de rutas, recorridos principales y paraderos intermedios.</p>
+            <span className="feature-icon">💺</span>
+            <h3>Selección de Asientos</h3>
+            <p>Visualiza el diagrama real del autobús y escoge tu ubicación preferida en tiempo real.</p>
+          </div>
+          <div className="feature-card">
+            <span className="feature-icon">🎫</span>
+            <h3>Boletos y Comprobantes</h3>
+            <p>Generación instantánea de comprobante digital con código único de reserva y QR.</p>
+          </div>
+          <div className="feature-card">
+            <span className="feature-icon">🚌</span>
+            <h3>Gestión de Flota</h3>
+            <p>Administración y control detallado de buses, capacidades y estados operacionales.</p>
           </div>
           <div className="feature-card">
             <span className="feature-icon">👨‍✈️</span>
-            <h3>Conductores</h3>
-            <p>Administración de choferes, vencimiento de licencias y asignación eficiente a los viajes.</p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">🚍</span>
-            <h3>Gestión de Viajes</h3>
-            <p>Programación, asignación de buses/choferes y seguimiento general de la operación.</p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">🔐</span>
-            <h3>Seguridad</h3>
-            <p>Control de acceso basado en roles (RBAC) y perfiles de usuarios autorizados.</p>
+            <h3>Conductores y Rutas</h3>
+            <p>Asignación validada de choferes profesionales, rutas fijas y paraderos intermedios.</p>
           </div>
           <div className="feature-card">
             <span className="feature-icon">📊</span>
-            <h3>Reportes</h3>
-            <p>Consultas operacionales avanzadas e información clave para la toma de decisiones.</p>
+            <h3>Dashboard y Reportes</h3>
+            <p>Control de ocupación, métricas de frecuencia de viajes e ingresos consolidados.</p>
           </div>
         </div>
       </section>

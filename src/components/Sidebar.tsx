@@ -13,14 +13,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
 
   const menuItems = [
     { key: 'dashboard', label: 'Dashboard', icon: '🏠', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
-    { key: 'users', label: 'Usuarios', icon: '👥', roles: ['admin'] },
-    { key: 'roles', label: 'Roles y Permisos', icon: '🔐', roles: ['admin'] },
+    { key: 'search-trips', label: 'Buscar y Reservar', icon: '🔍', roles: ['pasajero', 'admin', 'operador'] },
+    { key: 'my-reservations', label: 'Mis Reservas', icon: '🎫', roles: ['pasajero'] },
+    { key: 'reservations', label: 'Gestión Reservas', icon: '📑', roles: ['admin', 'operador'] },
     { key: 'buses', label: 'Buses', icon: '🚌', roles: ['admin', 'operador'] },
     { key: 'drivers', label: 'Conductores', icon: '👨‍✈️', roles: ['admin', 'operador'] },
     { key: 'routes-admin', label: 'Rutas', icon: '🗺️', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
     { key: 'stops', label: 'Paraderos', icon: '📍', roles: ['admin', 'operador', 'conductor'] },
-    { key: 'trips', label: 'Viajes', icon: '🚍', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
+    { key: 'trips', label: 'Viajes', icon: '🚍', roles: ['admin', 'operador', 'conductor'] },
     { key: 'reports', label: 'Reportes', icon: '📊', roles: ['admin', 'operador'] },
+    { key: 'users', label: 'Usuarios', icon: '👥', roles: ['admin'] },
+    { key: 'roles', label: 'Roles y Permisos', icon: '🔐', roles: ['admin'] },
     { key: 'profile', label: 'Mi Perfil', icon: '👤', roles: ['admin', 'operador', 'conductor', 'pasajero'] }
   ];
 
@@ -45,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
                   borderRadius: '4px',
                   color: 'var(--accent-color)'
                 }}>
-                  v1.1.0
+                  v2.0
                 </small>
               </span>
               <span className="brand-subtitle">Smart Mobility</span>

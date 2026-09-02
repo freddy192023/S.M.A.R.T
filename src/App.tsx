@@ -20,6 +20,9 @@ import { Drivers } from './pages/modules/Drivers';
 import { Stops } from './pages/modules/Stops';
 import { Trips } from './pages/modules/Trips';
 import { Reports } from './pages/modules/Reports';
+import { TripSearch } from './pages/modules/TripSearch';
+import { MyReservations } from './pages/modules/MyReservations';
+import { Reservations } from './pages/modules/Reservations';
 
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<string>('home');
@@ -70,6 +73,9 @@ export const App: React.FC = () => {
   // Page titles lookup
   const viewTitles: Record<string, string> = {
     dashboard: 'Dashboard General',
+    'search-trips': 'Búsqueda y Reserva de Viajes',
+    'my-reservations': 'Mis Reservas de Pasajero',
+    reservations: 'Gestión Central de Reservas',
     users: 'Gestión de Usuarios',
     roles: 'Roles y Permisos',
     buses: 'Gestión de Flota de Buses',
@@ -84,13 +90,16 @@ export const App: React.FC = () => {
   // Role-based access map: which roles can see which views
   const roleAccess: Record<string, string[]> = {
     dashboard: ['admin', 'operador', 'conductor', 'pasajero'],
+    'search-trips': ['pasajero', 'admin', 'operador'],
+    'my-reservations': ['pasajero'],
+    reservations: ['admin', 'operador'],
     users: ['admin'],
     roles: ['admin'],
     buses: ['admin', 'operador'],
     drivers: ['admin', 'operador'],
     'routes-admin': ['admin', 'operador', 'conductor', 'pasajero'],
     stops: ['admin', 'operador', 'conductor'],
-    trips: ['admin', 'operador', 'conductor', 'pasajero'],
+    trips: ['admin', 'operador', 'conductor'],
     reports: ['admin', 'operador'],
     profile: ['admin', 'operador', 'conductor', 'pasajero']
   };
@@ -108,6 +117,12 @@ export const App: React.FC = () => {
     switch (activeView) {
       case 'dashboard':
         return <Dashboard setActiveView={changeView} />;
+      case 'search-trips':
+        return <TripSearch setActiveView={changeView} />;
+      case 'my-reservations':
+        return <MyReservations setActiveView={changeView} />;
+      case 'reservations':
+        return <Reservations />;
       case 'users':
         return <Users />;
       case 'roles':
@@ -116,6 +131,8 @@ export const App: React.FC = () => {
         return <Buses />;
       case 'drivers':
         return <Drivers />;
+      case 'routes-admin':
+        return <RoutesPage />;
       case 'stops':
         return <Stops />;
       case 'trips':
@@ -126,12 +143,11 @@ export const App: React.FC = () => {
         if (profile) return <Profile currentUser={profile} />;
         return null;
       default:
-        // Módulo en desarrollo fallback
         return (
           <div className="fallback-view">
             <span className="fallback-icon">🛠️</span>
             <h2>Módulo en Desarrollo</h2>
-            <p>La vista seleccionada se encuentra actualmente en fase de prototipado inicial. Los controles CRUD y enlaces de Supabase se habilitarán en la siguiente etapa del proyecto.</p>
+            <p>La vista seleccionada se encuentra actualmente en fase de prototipado inicial.</p>
             <button className="btn btn-primary" onClick={() => changeView('dashboard')}>
               Volver al Dashboard
             </button>

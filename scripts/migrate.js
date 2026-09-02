@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS public.trips (
   driver_id UUID REFERENCES public.drivers(id) ON DELETE SET NULL,
   departure_time TIMESTAMPTZ NOT NULL,
   arrival_time TIMESTAMPTZ,
+  price NUMERIC(10,2) DEFAULT 35.00,
   status TEXT DEFAULT 'programado' CHECK (status IN ('programado', 'en_curso', 'finalizado', 'cancelado', 'retrasado')),
   max_passengers INTEGER DEFAULT 40,
   actual_passengers INTEGER DEFAULT 0,
@@ -105,7 +106,33 @@ CREATE TABLE IF NOT EXISTS public.trips (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. Tabla de logs de auditoría
+-- 7. Tabla de asientos
+CREATE TABLE IF NOT EXISTS public.seats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bus_id UUID REFERENCES public.buses(id) ON DELETE CASCADE,
+  seat_number INTEGER NOT NULL,
+  status TEXT DEFAULT 'available' CHECK (status IN ('available', 'reserved', 'unavailable')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(bus_id, seat_number)
+);
+
+-- 8. Tabla de reservas
+CREATE TABLE IF NOT EXISTS public.reservations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  passenger_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  trip_id UUID REFERENCES public.trips(id) ON DELETE CASCADE,
+  seat_number INTEGER NOT NULL,
+  reservation_code TEXT UNIQUE NOT NULL,
+  reservation_date TIMESTAMPTZ DEFAULT NOW(),
+  price NUMERIC(10,2) NOT NULL DEFAULT 35.00,
+  status TEXT DEFAULT 'confirmed' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+  payment_method TEXT DEFAULT 'Tarjeta Simulación',
+  payment_status TEXT DEFAULT 'approved',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Tabla de logs de auditoría
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -258,6 +285,8 @@ ALTER TABLE public.drivers DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.routes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stops DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.trips DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.seats DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reservations DISABLE ROW LEVEL SECURITY;
 
 -- Conceder permisos de uso y selección a los roles de la API de Supabase
 GRANT USAGE ON SCHEMA public TO anon, authenticated;

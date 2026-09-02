@@ -79,14 +79,47 @@ export interface Trip {
   status: string;
   max_passengers?: number;
   actual_passengers?: number;
+  price?: number;
+  available_seats?: number;
   observations?: string;
   // Campos calculados por el servicio
   route?: string;
+  origin?: string;
+  destination?: string;
   bus?: string;
+  bus_model?: string;
+  bus_capacity?: number;
   conductor?: string;
   date?: string;
   time?: string;
   raw?: any;
+}
+
+export interface Seat {
+  id: string;
+  bus_id?: string;
+  seat_number: number;
+  status: 'available' | 'reserved' | 'unavailable' | 'selected';
+  price?: number;
+}
+
+export interface Reservation {
+  id: string;
+  passenger_id: string;
+  trip_id: string;
+  seat_number: number;
+  seat_id?: string;
+  reservation_code: string;
+  reservation_date: string;
+  price: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  payment_method?: string;
+  payment_status?: string;
+  passenger_name?: string;
+  passenger_email?: string;
+  passenger_phone?: string;
+  trip?: Trip;
+  created_at?: string;
 }
 
 export interface BusUtilization {
