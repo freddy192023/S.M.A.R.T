@@ -641,60 +641,66 @@ S.M.A.R.T/
 
 ## 📋 Requisitos de Software
 
-La nueva versión supera ampliamente el mínimo de **20 requisitos de software** requeridos.
+El sistema cuenta con un total de **35 requisitos de software** (20 Requisitos Funcionales y 15 Requisitos No Funcionales) estructurados para ser claros, verificables y fáciles de validar mediante casos de prueba.
 
-### Requisitos Funcionales
+### 20 Requisitos Funcionales
 
-| ID | Requisito |
+| ID | Requisito Funcional |
 |---|---|
-| **RF-01** | El sistema deberá permitir registrar usuarios con selección de rol. |
-| **RF-02** | El sistema deberá permitir iniciar y cerrar sesión de forma segura. |
-| **RF-03** | El sistema deberá permitir recuperar la contraseña por correo. |
-| **RF-04** | El sistema deberá permitir administrar buses (crear, editar, listar). |
-| **RF-05** | El sistema deberá impedir programar viajes con buses fuera de servicio. |
-| **RF-06** | El sistema deberá permitir administrar conductores. |
-| **RF-07** | El sistema deberá verificar disponibilidad de conductor antes de asignarlo. |
-| **RF-08** | El sistema deberá permitir administrar rutas con origen y destino. |
-| **RF-09** | El sistema deberá permitir administrar paraderos vinculados a rutas. |
-| **RF-10** | El sistema deberá permitir programar viajes asignando ruta, bus, conductor y precio. |
-| **RF-11** | El sistema deberá permitir al pasajero buscar viajes por origen, destino y fecha. |
-| **RF-12** | El sistema deberá mostrar los asientos disponibles de un viaje. |
-| **RF-13** | El sistema deberá permitir al pasajero seleccionar un asiento disponible. |
-| **RF-14** | El sistema deberá impedir seleccionar un asiento ya reservado. |
-| **RF-15** | El sistema deberá permitir confirmar una reserva con pago simulado. |
-| **RF-16** | El sistema deberá generar un código único de reserva. |
-| **RF-17** | El sistema deberá permitir al pasajero consultar sus reservas. |
-| **RF-18** | El sistema deberá permitir al pasajero cancelar una reserva. |
-| **RF-19** | El sistema deberá generar un comprobante de reserva visualizable. |
-| **RF-20** | El sistema deberá mostrar reportes de viajes, reservas y utilización de flota. |
-| **RF-21** | El sistema deberá permitir al conductor ver sus viajes asignados y sus pasajeros. |
-| **RF-22** | El sistema deberá permitir cambiar el estado de un viaje. |
+| **RF-01** | El sistema deberá permitir a los usuarios **iniciar sesión** mediante correo electrónico y contraseña. |
+| **RF-02** | El sistema deberá permitir a los usuarios **cerrar sesión**. |
+| **RF-03** | El sistema deberá identificar el **rol del usuario** y mostrar las funcionalidades correspondientes. |
+| **RF-04** | El sistema deberá permitir al administrador **registrar, consultar, actualizar y eliminar usuarios**. |
+| **RF-05** | El sistema deberá permitir **registrar buses** con sus datos principales, como patente, marca, modelo, año y capacidad. |
+| **RF-06** | El sistema deberá permitir **consultar y modificar los datos de los buses** registrados. |
+| **RF-07** | El sistema deberá permitir **registrar y administrar conductores**, incluyendo sus datos y licencia. |
+| **RF-08** | El sistema deberá permitir **registrar y administrar rutas**, indicando origen, destino, distancia y duración estimada. |
+| **RF-09** | El sistema deberá permitir **registrar y administrar paraderos** asociados a una ruta. |
+| **RF-10** | El sistema deberá permitir **crear y programar viajes**, indicando ruta, bus, conductor, fecha y hora. |
+| **RF-11** | El sistema deberá permitir establecer y modificar el **precio de cada viaje**. |
+| **RF-12** | El sistema deberá permitir al pasajero **buscar viajes por origen, destino y fecha**. |
+| **RF-13** | El sistema deberá mostrar al pasajero los **viajes disponibles** según los criterios de búsqueda. |
+| **RF-14** | El sistema deberá mostrar la **disponibilidad de asientos** de cada viaje. |
+| **RF-15** | El sistema deberá permitir al pasajero **seleccionar un asiento disponible**. |
+| **RF-16** | El sistema deberá impedir que un pasajero **reserve un asiento que ya se encuentre ocupado**. |
+| **RF-17** | El sistema deberá permitir al pasajero **registrar y confirmar una reserva** asociada a un viaje y asiento. |
+| **RF-18** | El sistema deberá generar un **código o comprobante único de reserva**. |
+| **RF-19** | El sistema deberá permitir al pasajero **consultar y cancelar sus reservas**, según las condiciones establecidas. |
+| **RF-20** | El sistema deberá generar **consultas y reportes de viajes, reservas y ocupación de buses**. |
 
-### Requisitos No Funcionales
+---
 
-| ID | Requisito | Descripción |
-|---|---|---|
-| **RNF-01** | **Seguridad** | Autenticación basada en Supabase Auth (JWT) y control de acceso por roles (RBAC) en todas las vistas y APIs. |
-| **RNF-02** | **Usabilidad** | Diseño web responsivo e intuitivo, adaptable a pantallas de escritorio, tablets y dispositivos móviles con paleta de colores accesibles. |
-| **RNF-03** | **Rendimiento** | Tiempo de carga inicial del portal web inferior a 3 segundos y respuestas de consultas de viajes en menos de 500ms. |
-| **RNF-04** | **Disponibilidad** | Arquitectura cloud con disponibilidad 99.9% 24/7 mediante infraestructura global en Vercel y Supabase. |
-| **RNF-05** | **Mantenibilidad** | Código modularizado en TypeScript con arquitectura por capas (UI, Services, Context, Lib) facil de mantener y extender. |
-| **RNF-06** | **Compatibilidad** | Compatibilidad nativa con los principales navegadores modernos (Google Chrome, Mozilla Firefox, Microsoft Edge y Safari). |
-| **RNF-07** | **Escalabilidad** | Capacidad de incorporar cientos de rutas, vehículos y usuarios concurrentes sin degradar la respuesta del servidor. |
-| **RNF-08** | **Resiliencia y Persistencia** | Sistema de almacenamiento local de respaldo (`localStorage`) para preservar la sesión y prevenir pérdida de datos ante desconexiones. |
-| **RNF-09** | **Integridad de Datos** | Validaciones y restricciones a nivel de base de datos PostgreSQL (Foreign Keys, Triggers y Uniques) para evitar duplicidad o reservas conflictivas. |
-| **RNF-10** | **Trazabilidad y Observabilidad** | Sistema de registro centralizado de eventos y errores (`vercelLogger`) para monitoreo técnico y auditoría del sistema. |
+### 15 Requisitos No Funcionales
 
-### Cumplimiento de requisitos del proyecto académico
+| ID | Requisito No Funcional |
+|---|---|
+| **RNF-01** | El sistema deberá proteger las credenciales de los usuarios mediante un mecanismo de **autenticación segura**. |
+| **RNF-02** | El sistema deberá implementar **control de acceso basado en roles (RBAC)** para restringir funcionalidades según el usuario. |
+| **RNF-03** | Las claves y credenciales privadas del sistema **no deberán exponerse en el código del frontend**. |
+| **RNF-04** | El sistema deberá mantener la **integridad de los datos** almacenados en la base de datos. |
+| **RNF-05** | El sistema deberá impedir inconsistencias que permitan que un mismo asiento sea reservado simultáneamente para un mismo viaje. |
+| **RNF-06** | El sistema deberá validar los datos ingresados en los formularios antes de almacenarlos. |
+| **RNF-07** | El sistema deberá mostrar **mensajes de error claros y comprensibles** cuando ocurra una operación inválida. |
+| **RNF-08** | La interfaz deberá ser **responsive**, permitiendo utilizar el sistema desde computadores, tablets y teléfonos. |
+| **RNF-09** | La interfaz deberá mantener una **navegación consistente** entre los diferentes módulos. |
+| **RNF-10** | Las operaciones habituales del sistema deberán presentar un **tiempo de respuesta adecuado** para el usuario. |
+| **RNF-11** | El código deberá estar organizado de manera **modular y mantenible**, permitiendo agregar funcionalidades sin modificar toda la aplicación. |
+| **RNF-12** | El sistema deberá utilizar **variables de entorno** para gestionar las configuraciones y credenciales de conexión. |
+| **RNF-13** | La aplicación deberá ser compatible con **navegadores web modernos**. |
+| **RNF-14** | Las funcionalidades principales deberán poder ser verificadas mediante **casos de prueba**. |
+| **RNF-15** | El sistema deberá utilizar mecanismos de control de versiones para mantener un **registro de los cambios realizados al software**. |
 
-| Requisito solicitado          | S.M.A.R.T.                                      |
-| ----------------------------- | ----------------------------------------------- |
-| **20 requisitos de software** | ✅ 22 RF + 10 RNF documentados (32 en total)    |
-| **Login**                     | ✅ Supabase Auth con JWT                        |
-| **Menú principal**            | ✅ Dashboard adaptativo + Sidebar por rol       |
-| **1 CRUD completo**           | ✅ Buses (+ Conductores, Rutas, Viajes, Reservas) |
-| **1 proceso de negocio**      | ✅ Reserva de viaje (búsqueda → asiento → pago → comprobante) |
-| **1 reporte / consulta**      | ✅ Reportes de viajes, reservas y ocupación de flota |
+### Resumen de Cobertura del Proyecto
+
+| Requisito Solicitado | Implementación en S.M.A.R.T. |
+|---|---|
+| **20 Requisitos Funcionales** | ✅ RF-01 a RF-20 completos y documentados |
+| **15 Requisitos No Funcionales** | ✅ RNF-01 a RNF-15 completos y documentados |
+| **Login / Autenticación** | ✅ RF-01, RF-02, RNF-01, RNF-03 |
+| **Menú Principal según Rol** | ✅ RF-03, RNF-02 |
+| **CRUDs Completos** | ✅ RF-04 (Usuarios), RF-05/06 (Buses), RF-07 (Conductores), RF-08 (Rutas), RF-09 (Paraderos) |
+| **Proceso Principal** | ✅ Búsqueda (RF-12/13) → Asientos (RF-14/15/16) → Reserva (RF-17) → Comprobante (RF-18) |
+| **Reporte / Consulta** | ✅ RF-20 (Consultas y reportes de viajes, reservas y ocupación de buses) |
 
 ---
 
