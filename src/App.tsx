@@ -90,7 +90,7 @@ export const App: React.FC = () => {
   // Role-based access map: which roles can see which views
   const roleAccess: Record<string, string[]> = {
     dashboard: ['admin', 'operador', 'conductor', 'pasajero'],
-    'search-trips': ['pasajero', 'admin', 'operador'],
+    'search-trips': ['pasajero'],
     'my-reservations': ['pasajero'],
     reservations: ['admin', 'operador'],
     users: ['admin'],

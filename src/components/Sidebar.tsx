@@ -13,7 +13,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
 
   const menuItems = [
     { key: 'dashboard', label: 'Dashboard', icon: '🏠', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
-    { key: 'search-trips', label: 'Buscar y Reservar', icon: '🔍', roles: ['pasajero', 'admin', 'operador'] },
+    { key: 'search-trips', label: 'Buscar y Reservar', icon: '🔍', roles: ['pasajero'] },
     { key: 'my-reservations', label: 'Mis Reservas', icon: '🎫', roles: ['pasajero'] },
     { key: 'reservations', label: 'Gestión Reservas', icon: '📑', roles: ['admin', 'operador'] },
     { key: 'buses', label: 'Buses', icon: '🚌', roles: ['admin', 'operador'] },
