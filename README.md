@@ -77,6 +77,53 @@ S.M.A.R.T. centraliza toda esta información en una única plataforma web accesi
 
 ---
 
+## 📖 Manual de Flujo Operacional (Guía de Uso del Sistema)
+
+Para que el sistema **S.M.A.R.T.** funcione de forma integrada y sin interrupciones, los Operadores y Administradores deben seguir la siguiente secuencia lógica de **6 pasos conectados**:
+
+```
+ ┌────────────────┐      ┌────────────────┐      ┌────────────────┐
+ │ 1. REGISTRAR   │ ───► │ 2. REGISTRAR   │ ───► │ 3. CREAR       │
+ │    BUSES       │      │    CONDUCTORES │      │    RUTAS       │
+ └────────────────┘      └────────────────┘      └────────────────┘
+         │                                               │
+         ▼                                               ▼
+ ┌────────────────┐      ┌────────────────┐      ┌────────────────┐
+ │ 6. EJECUCIÓN   │ ◄─── │ 5. PROGRAMAR   │ ◄─── │ 4. ASIGNAR     │
+ │    CONDUCTOR   │      │    EL VIAJE    │      │    PARADEROS   │
+ └────────────────┘      └────────────────┘      └────────────────┘
+```
+
+### 🔹 Paso 1: Registrar Buses en Flota (`Módulo Buses`)
+* **Acción:** Ingresar los vehículos disponibles en la empresa (Patente ej: `ABCD-12`, Marca `Mercedes-Benz`, Modelo `Sprinter`, Año `2024` y Capacidad `40 pasajeros`).
+* **Finalidad:** Disponer de inventario de vehículos activos para asignar a los viajes.
+
+### 🔹 Paso 2: Registrar Conductores Autorizados (`Módulo Conductores`)
+* **Acción:** Dar de alta a los choferes autorizados (Nombre completo, N° Licencia, Vencimiento de Licencia, Teléfono y Bus asignado opcional).
+* **Finalidad:** Tener personal capacitado y activo para conducir las unidades.
+
+### 🔹 Paso 3: Crear Rutas y Trayectos (`Módulo Rutas`)
+* **Acción:** Configurar los recorridos interurbanos o corporativos especificando Origen (`Santiago Central`), Destino (`Valparaíso`), Distancia en KM y Duración estimada en minutos.
+* **Finalidad:** Definir los caminos principales que conectan los puntos de viaje.
+
+### 🔹 Paso 4: Asignar Paraderos Intermedios (`Módulo Paraderos`)
+* **Acción:** Si la ruta es extensa o requiere paradas intermedias de subida/bajada de pasajeros, registrar cada parada asignándola a su Ruta correspondiente y orden de secuencia (`Parada N° 1: Pajaritos`, `Parada N° 2: Quilicura`).
+* **Finalidad:** Que tanto el conductor como el pasajero conozcan la secuencia exacta del recorrido.
+
+### 🔹 Paso 5: Programar el Viaje (`Módulo Viajes` - Conexión Total)
+* **Acción:** El operador une todos los componentes creados en los pasos previos en un solo registro:
+  1. Selecciona la **Ruta**.
+  2. Asigna un **Bus** disponible.
+  3. Asigna un **Conductor** activo.
+  4. Selecciona la **Fecha y Hora exacta de Salida**.
+  5. Define el **Precio del Pasaje (S/)**.
+* **Resultado:** El viaje queda publicado automáticamente para reserva y selección de asientos por los pasajeros.
+
+### 🔹 Paso 6: Control del Conductor y Check-in (`Consola Conductor`)
+* **Acción:** El chofer ingresa a su panel, presiona `▶ Iniciar Viaje`, consulta la secuencia de Paraderos y abre el `📋 Manifiesto de Pasajeros` para realizar el check-in (`✓ Marcar Abordado`) al subir cada pasajero al bus.
+
+---
+
 ## 🔄 Proceso Principal del Sistema
 
 El proceso más importante de S.M.A.R.T. es la **reserva de un viaje**, que demuestra que el sistema no es solo un CRUD, sino que tiene un flujo de negocio completo.

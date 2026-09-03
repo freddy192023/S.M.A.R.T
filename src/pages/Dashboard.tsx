@@ -7,6 +7,7 @@ import { tripService } from '../services/tripService';
 import { reservationService } from '../services/reservationService';
 import { VoucherModal } from '../components/VoucherModal';
 import { PassengerManifestModal } from '../components/PassengerManifestModal';
+import { OperationalGuideModal } from '../components/OperationalGuideModal';
 import { useNotification } from '../context/NotificationContext';
 import type { Reservation } from '../types';
 
@@ -20,6 +21,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
   const role = profile?.role || 'pasajero';
   const isPassenger = role === 'pasajero';
   const isDriver = role === 'conductor';
+  const isAdminOrOperator = role === 'admin' || role === 'operador';
 
   const [stats, setStats] = useState({
     activeBuses: 0,
@@ -36,6 +38,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
   const [passengerReservations, setPassengerReservations] = useState<Reservation[]>([]);
   const [selectedVoucher, setSelectedVoucher] = useState<Reservation | null>(null);
   const [manifestTrip, setManifestTrip] = useState<any | null>(null);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -181,6 +184,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
                 📋 Abrir Manifiesto de Pasajeros
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Banner de Bienvenida del Operador / Administrador */}
+      {isAdminOrOperator && (
+        <div className="content-card" style={{
+          background: 'linear-gradient(135deg, rgba(0, 210, 196, 0.15) 0%, rgba(13, 21, 39, 0.9) 100%)',
+          border: '1px solid var(--accent-glow)',
+          padding: '1.8rem 2rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div>
+              <span className="badge badge-success" style={{ marginBottom: '0.6rem', display: 'inline-block' }}>
+                ⚙️ Panel de Gestión Operacional
+              </span>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>
+                ¡Hola, {profile?.name || profile?.full_name || 'Operador'}! Consola de administración general.
+              </h2>
+              <p style={{ color: 'var(--text-muted)', maxWidth: '680px' }}>
+                Conecta tus Buses, Conductores, Rutas y Paraderos para programar salidas operacionales sin interrupciones.
+              </p>
+            </div>
+            <button
+              className="btn btn-primary"
+              style={{ padding: '0.8rem 1.5rem', fontSize: '0.95rem' }}
+              onClick={() => setShowGuideModal(true)}
+            >
+              📖 Abrir Manual Operacional (6 Pasos)
+            </button>
           </div>
         </div>
       )}
@@ -530,6 +564,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
         <PassengerManifestModal
           trip={manifestTrip}
           onClose={() => setManifestTrip(null)}
+        />
+      )}
+
+      {/* Modal de Guía Operacional (Manual) */}
+      {showGuideModal && (
+        <OperationalGuideModal
+          onClose={() => setShowGuideModal(false)}
         />
       )}
     </>
