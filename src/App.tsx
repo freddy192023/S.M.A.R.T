@@ -101,6 +101,7 @@ export const App: React.FC = () => {
     stops: ['admin', 'operador', 'conductor'],
     trips: ['admin', 'operador', 'conductor'],
     reports: ['admin', 'operador'],
+    'how-it-works': ['admin', 'operador', 'conductor', 'pasajero'],
     profile: ['admin', 'operador', 'conductor', 'pasajero']
   };
 
@@ -139,6 +140,8 @@ export const App: React.FC = () => {
         return <Trips />;
       case 'reports':
         return <Reports />;
+      case 'how-it-works':
+        return <HowItWorks />;
       case 'profile':
         if (profile) return <Profile currentUser={profile} />;
         return null;
