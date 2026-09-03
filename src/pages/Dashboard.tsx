@@ -6,6 +6,8 @@ import { routeService } from '../services/routeService';
 import { tripService } from '../services/tripService';
 import { reservationService } from '../services/reservationService';
 import { VoucherModal } from '../components/VoucherModal';
+import { PassengerManifestModal } from '../components/PassengerManifestModal';
+import { useNotification } from '../context/NotificationContext';
 import type { Reservation } from '../types';
 
 interface DashboardProps {
@@ -14,9 +16,10 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
   const { profile } = useAuth();
+  const { showNotification } = useNotification();
   const role = profile?.role || 'pasajero';
   const isPassenger = role === 'pasajero';
-  const isAdminOrOperator = role === 'admin' || role === 'operador';
+  const isDriver = role === 'conductor';
 
   const [stats, setStats] = useState({
     activeBuses: 0,
@@ -32,6 +35,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
   const [trips, setTrips] = useState<any[]>([]);
   const [passengerReservations, setPassengerReservations] = useState<Reservation[]>([]);
   const [selectedVoucher, setSelectedVoucher] = useState<Reservation | null>(null);
+  const [manifestTrip, setManifestTrip] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +78,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
     loadData();
   }, [profile]);
 
+  const handleTripStatusChange = async (tripId: string, newStatusLabel: 'En Curso' | 'Finalizado') => {
+    try {
+      const dbStatus = newStatusLabel === 'En Curso' ? 'en_curso' : 'finalizado';
+      if (!tripId.startsWith('gen-trip-')) {
+        await tripService.updateStatus(tripId, dbStatus);
+      }
+      setTrips(prev => prev.map(t => t.id === tripId ? { ...t, status: newStatusLabel } : t));
+      showNotification(
+        'Estado del Viaje Actualizado',
+        `El viaje ${tripId} ahora se encuentra en estado: ${newStatusLabel.toUpperCase()}.`,
+        newStatusLabel === 'En Curso' ? 'info' : 'success'
+      );
+    } catch (err) {
+      console.error('Error cambiando estado de viaje:', err);
+      showNotification('Aviso Operacional', `Se actualizó el estado a ${newStatusLabel} localmente.`, 'info');
+      setTrips(prev => prev.map(t => t.id === tripId ? { ...t, status: newStatusLabel } : t));
+    }
+  };
+
   if (loading) {
     return (
       <div className="content-card" style={{ textAlign: 'center', padding: '4rem' }}>
@@ -89,11 +112,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
     { key: 'reservations', label: 'Gestión de Reservas', icon: '📑', roles: ['admin', 'operador'], variant: 'secondary' },
     { key: 'buses', label: 'Administrar Flota', icon: '🚌', roles: ['admin', 'operador'], variant: 'secondary' },
     { key: 'drivers', label: 'Ver Conductores', icon: '👨‍✈️', roles: ['admin', 'operador'], variant: 'secondary' },
-    { key: 'trips', label: 'Programar Viajes', icon: '🚍', roles: ['admin', 'operador', 'conductor'], variant: 'secondary' },
-    { key: 'reports', label: 'Ver Reportes', icon: '📊', roles: ['admin', 'operador'], variant: 'primary' },
-    { key: 'routes-admin', label: 'Consultar Rutas', icon: '🗺️', roles: ['pasajero', 'conductor'], variant: 'secondary' },
+    { key: 'trips', label: isDriver ? 'Mis Viajes y Control' : 'Programar Viajes', icon: '🚍', roles: ['admin', 'operador', 'conductor'], variant: 'primary' },
+    { key: 'reports', label: 'Ver Reportes', icon: '📊', roles: ['admin', 'operador'], variant: 'secondary' },
     { key: 'profile', label: 'Mi Perfil', icon: '👤', roles: ['pasajero', 'conductor', 'admin', 'operador'], variant: 'secondary' },
   ].filter(link => link.roles.includes(role));
+
+  const driverActiveTrip = trips[0] || null;
 
   return (
     <>
@@ -124,6 +148,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
             >
               🔍 Reservar un Viaje Ahora
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Banner de Bienvenida del Conductor */}
+      {isDriver && (
+        <div className="content-card" style={{
+          background: 'linear-gradient(135deg, rgba(0, 210, 196, 0.15) 0%, rgba(13, 21, 39, 0.9) 100%)',
+          border: '1px solid var(--accent-glow)',
+          padding: '2rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div>
+              <span className="badge badge-success" style={{ marginBottom: '0.6rem', display: 'inline-block' }}>
+                👨‍✈️ Consola Operacional del Conductor
+              </span>
+              <h2 style={{ fontSize: '1.6rem', marginBottom: '0.4rem' }}>
+                ¡Hola, {profile?.name || profile?.full_name || 'Conductor'}! Listo para tu jornada operacional.
+              </h2>
+              <p style={{ color: 'var(--text-muted)', maxWidth: '650px' }}>
+                Revisa tu bus asignado, controla el inicio y fin de tus recorridos y gestiona el abordaje de pasajeros en tiempo real.
+              </p>
+            </div>
+            {driverActiveTrip && (
+              <button
+                className="btn btn-primary"
+                style={{ padding: '0.8rem 1.8rem', fontSize: '1rem' }}
+                onClick={() => setManifestTrip(driverActiveTrip)}
+              >
+                📋 Abrir Manifiesto de Pasajeros
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -161,26 +218,53 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
               </div>
             </div>
           </>
+        ) : isDriver ? (
+          <>
+            <div className="stat-card">
+              <span className="stat-icon" style={{ color: 'var(--accent-color)' }}>🚌</span>
+              <div className="stat-info">
+                <span className="stat-value">{driverActiveTrip?.bus || 'BUS-001'}</span>
+                <span className="stat-label">Bus Asignado</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon" style={{ color: 'var(--success-color)' }}>🗺️</span>
+              <div className="stat-info">
+                <span className="stat-value">{driverActiveTrip?.route || 'Ruta General'}</span>
+                <span className="stat-label">Ruta Programada</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon" style={{ color: 'var(--warning-color)' }}>🎟️</span>
+              <div className="stat-info">
+                <span className="stat-value">{driverActiveTrip?.actual_passengers || 0} / {driverActiveTrip?.bus_capacity || 40}</span>
+                <span className="stat-label">Pasajeros Reservados</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon" style={{ color: 'var(--primary-color)' }}>⏱️</span>
+              <div className="stat-info">
+                <span className="stat-value">{driverActiveTrip?.status || 'Programado'}</span>
+                <span className="stat-label">Estado del Recorrido</span>
+              </div>
+            </div>
+          </>
         ) : (
           <>
-            {isAdminOrOperator && (
-              <div className="stat-card">
-                <span className="stat-icon" style={{ color: 'var(--accent-color)' }}>🚌</span>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.activeBuses}</span>
-                  <span className="stat-label">Buses Disponibles</span>
-                </div>
+            <div className="stat-card">
+              <span className="stat-icon" style={{ color: 'var(--accent-color)' }}>🚌</span>
+              <div className="stat-info">
+                <span className="stat-value">{stats.activeBuses}</span>
+                <span className="stat-label">Buses Disponibles</span>
               </div>
-            )}
-            {isAdminOrOperator && (
-              <div className="stat-card">
-                <span className="stat-icon" style={{ color: 'var(--primary-color)' }}>👨‍✈️</span>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.activeDrivers}</span>
-                  <span className="stat-label">Conductores</span>
-                </div>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon" style={{ color: 'var(--primary-color)' }}>👨‍✈️</span>
+              <div className="stat-info">
+                <span className="stat-value">{stats.activeDrivers}</span>
+                <span className="stat-label">Conductores</span>
               </div>
-            )}
+            </div>
             <div className="stat-card">
               <span className="stat-icon" style={{ color: 'var(--success-color)' }}>🗺️</span>
               <div className="stat-info">
@@ -273,6 +357,98 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
             </table>
           </div>
         </div>
+      ) : isDriver ? (
+        <div className="content-card">
+          <div className="card-header">
+            <div className="card-title-group">
+              <h2>🚍 Control Operacional del Conductor</h2>
+              <p>Gestiona el estado de tu viaje asignado y valida la lista de abordaje de pasajeros</p>
+            </div>
+            {driverActiveTrip && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => setManifestTrip(driverActiveTrip)}
+              >
+                📋 Ver Manifiesto Completo
+              </button>
+            )}
+          </div>
+
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Ruta Programada</th>
+                  <th>Vehículo</th>
+                  <th>Hora Salida</th>
+                  <th>Pasajeros</th>
+                  <th>Estado Recorrido</th>
+                  <th>Control Operacional</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trips.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem' }}>
+                      No tienes viajes asignados para operar en este momento.
+                    </td>
+                  </tr>
+                ) : (
+                  trips.map((t: any, idx: number) => {
+                    const isRunning = t.status === 'En Curso';
+                    const isFinished = t.status === 'Finalizado';
+                    return (
+                      <tr key={idx}>
+                        <td className="text-bold">{t.route}</td>
+                        <td>
+                          <strong>{t.bus}</strong> ({t.bus_model})
+                        </td>
+                        <td>{t.date} a las <span className="text-accent">{t.time}</span></td>
+                        <td>
+                          <span className="badge badge-success">
+                            {t.actual_passengers || 0} / {t.bus_capacity || 40} abordados
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge ${isRunning ? 'badge-success' : isFinished ? 'badge-secondary' : 'badge-warning'}`}>
+                            {t.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            {!isRunning && !isFinished && (
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => handleTripStatusChange(t.id, 'En Curso')}
+                              >
+                                ▶ Iniciar Viaje
+                              </button>
+                            )}
+                            {isRunning && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ background: 'var(--warning-color)', color: '#000' }}
+                                onClick={() => handleTripStatusChange(t.id, 'Finalizado')}
+                              >
+                                🏁 Finalizar Viaje
+                              </button>
+                            )}
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setManifestTrip(t)}
+                            >
+                              📋 Manifiesto
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : (
         <div className="content-card">
           <div className="card-header">
@@ -287,7 +463,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
                 <tr>
                   <th>Ruta</th>
                   <th>Vehículo</th>
-                  {isAdminOrOperator && <th>Conductor Asignado</th>}
+                  <th>Conductor Asignado</th>
                   <th>Hora Salida</th>
                   <th>Estado</th>
                 </tr>
@@ -295,7 +471,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
               <tbody>
                 {trips.length === 0 ? (
                   <tr>
-                    <td colSpan={isAdminOrOperator ? 5 : 4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
                       No hay viajes registrados actualmente.
                     </td>
                   </tr>
@@ -304,7 +480,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
                     <tr key={idx}>
                       <td className="text-bold">{t.route}</td>
                       <td>{t.bus}</td>
-                      {isAdminOrOperator && <td>{t.conductor}</td>}
+                      <td>{t.conductor}</td>
                       <td>{t.date} {t.time}</td>
                       <td>
                         <span className={`badge ${t.status === 'En Curso' ? 'badge-success' : 'badge-warning'}`}>
@@ -346,6 +522,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
         <VoucherModal
           reservation={selectedVoucher}
           onClose={() => setSelectedVoucher(null)}
+        />
+      )}
+
+      {/* Modal de Manifiesto de Pasajeros para Conductor */}
+      {manifestTrip && (
+        <PassengerManifestModal
+          trip={manifestTrip}
+          onClose={() => setManifestTrip(null)}
         />
       )}
     </>

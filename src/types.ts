@@ -112,7 +112,7 @@ export interface Reservation {
   reservation_code: string;
   reservation_date: string;
   price: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'boarded';
   payment_method?: string;
   payment_status?: string;
   passenger_name?: string;
