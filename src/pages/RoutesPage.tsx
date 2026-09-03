@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { routeService } from '../services/routeService';
+import { stopService } from '../services/stopService';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,19 +22,25 @@ export const RoutesPage: React.FC = () => {
   const { profile } = useAuth();
   const isAdminOrOperator = profile?.role === 'admin' || profile?.role === 'operador';
 
-  const loadRoutes = async () => {
+  const [allStops, setAllStops] = useState<any[]>([]);
+
+  const loadData = async () => {
     try {
-      const data = await routeService.getAll();
-      setRoutes(data || []);
+      const [rData, sData] = await Promise.all([
+        routeService.getAll(),
+        stopService.getAll()
+      ]);
+      setRoutes(rData || []);
+      setAllStops(sData || []);
     } catch (err) {
-      console.error('Error cargando rutas:', err);
+      console.error('Error cargando datos en rutas:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadRoutes();
+    loadData();
   }, []);
 
   const handleCreateRoute = async (e: React.FormEvent) => {
@@ -134,6 +141,29 @@ export const RoutesPage: React.FC = () => {
               {r.distance_km && (
                 <p className="route-public-detail">📏 <strong>Distancia:</strong> {r.distance_km} km</p>
               )}
+
+              {/* Paraderos Intermedios Asociados */}
+              {(() => {
+                const stopsForRoute = allStops.filter(st => st.route_id === r.id);
+                return (
+                  <div style={{ marginTop: '0.8rem', padding: '0.6rem', background: 'rgba(0, 210, 196, 0.05)', borderRadius: '6px', border: '1px dashed var(--border-color)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                      📍 PARADEROS Y PARADAS ({stopsForRoute.length}):
+                    </div>
+                    {stopsForRoute.length === 0 ? (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Directo sin paradas intermedias</span>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        {stopsForRoute.map((st, idx) => (
+                          <span key={st.id || idx} className="badge badge-secondary" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>
+                            {st.stop_order}. {st.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
             <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button 
