@@ -21,6 +21,7 @@
 - [Descripción General](#-descripción-general)
 - [Problema que Resuelve](#-problema-que-resuelve)
 - [Proceso Principal del Sistema](#-proceso-principal-del-sistema)
+- [Manual de Defensa Técnica y Auditoría](DEFENSA_TECNICA.md)
 - [Tipos de Usuarios y Roles](#-tipos-de-usuarios-y-roles-rbac)
 - [Módulos del Sistema](#-módulos-del-sistema)
 - [Sistema de Asientos](#-sistema-de-asientos-nuevo)
