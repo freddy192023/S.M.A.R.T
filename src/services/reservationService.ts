@@ -30,9 +30,22 @@ export const generateReservationCode = (): string => {
   return `SMART-${randomNum}`;
 };
 
+let reservationsCache: { data: Reservation[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 15000; // 15 segundos
+
 export const reservationService = {
+  clearCache: () => {
+    reservationsCache = null;
+    tripService.clearCache();
+  },
+
   // Obtener todas las reservas con detalles de viaje
-  getAll: async (): Promise<Reservation[]> => {
+  getAll: async (forceRefresh = false): Promise<Reservation[]> => {
+    const now = Date.now();
+    if (!forceRefresh && reservationsCache && (now - reservationsCache.timestamp < CACHE_TTL_MS)) {
+      return reservationsCache.data;
+    }
+
     try {
       const { data, error } = await supabase
         .from('reservations')
@@ -53,9 +66,9 @@ export const reservationService = {
 
       if (error) throw error;
 
-      const trips = await tripService.getAllWithDetails();
+      const trips = await tripService.getAllWithDetails(forceRefresh);
 
-      return (data || []).map((res: any) => {
+      const result = (data || []).map((res: any) => {
         const trip = trips.find(t => t.id === res.trip_id);
         const profile = res.profiles || {};
         return {
@@ -65,7 +78,10 @@ export const reservationService = {
           seat_number: res.seat_number,
           reservation_code: res.reservation_code,
           reservation_date: res.reservation_date,
-          price: Number(res.price) || (trip?.price || 35.00),
+          price: (() => {
+            let p = Number(res.price) || (trip?.price || 12000);
+            return p < 500 ? p * 300 : p;
+          })(),
           status: res.status || 'confirmed',
           payment_method: res.payment_method || 'Pago Digital Simulado',
           payment_status: res.payment_status || 'approved',
@@ -75,14 +91,19 @@ export const reservationService = {
           trip
         };
       });
+
+      reservationsCache = { data: result, timestamp: now };
+      return result;
     } catch (err) {
       console.warn('Usando almacenamiento local para reservas:', err);
       const local = getLocalReservations();
-      const trips = await tripService.getAllWithDetails();
-      return local.map(r => ({
+      const trips = await tripService.getAllWithDetails(forceRefresh);
+      const result = local.map(r => ({
         ...r,
         trip: r.trip || trips.find(t => t.id === r.trip_id)
       }));
+      reservationsCache = { data: result, timestamp: now };
+      return result;
     }
   },
 
@@ -115,6 +136,7 @@ export const reservationService = {
     passenger_email?: string;
     passenger_phone?: string;
   }): Promise<Reservation> => {
+    reservationService.clearCache();
     const code = generateReservationCode();
     let finalTripId = reservationData.trip_id;
 
@@ -197,13 +219,11 @@ export const reservationService = {
       console.warn('Supabase no disponible para reservations, guardando localmente:', e);
     }
 
-    // 2. Guardar en almacenamiento local como respaldo
+    // 2. Guardar en almacenamiento local como respaldo (evitando duplicados)
     const local = getLocalReservations();
-    // Guardar con ambos IDs (virtual y real) para máxima compatibilidad
     saveLocalReservations([
       newReservation,
-      { ...newReservation, trip_id: reservationData.trip_id },
-      ...local
+      ...local.filter(r => r.id !== newReservation.id && !(r.trip_id === newReservation.trip_id && r.seat_number === newReservation.seat_number))
     ]);
 
     // Asociar datos del viaje
@@ -215,6 +235,7 @@ export const reservationService = {
 
   // Cancelar una reserva
   cancel: async (reservationId: string): Promise<boolean> => {
+    reservationService.clearCache();
     try {
       await supabase
         .from('reservations')

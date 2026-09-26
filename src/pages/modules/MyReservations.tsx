@@ -151,7 +151,7 @@ export const MyReservations: React.FC<MyReservationsProps> = ({ setActiveView })
                     </div>
                     <div className="res-meta-item">
                       <span className="label">💰 Monto:</span>
-                      <span className="value text-bold">S/ {Number(res.price).toFixed(2)}</span>
+                      <span className="value text-bold">$ {Math.round(Number(res.price) < 500 ? Number(res.price) * 300 : Number(res.price)).toLocaleString('es-CL')} CLP</span>
                     </div>
                     <div className="res-meta-item">
                       <span className="label">💳 Pago:</span>

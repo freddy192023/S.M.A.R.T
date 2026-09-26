@@ -123,7 +123,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div className="summary-divider"></div>
                 <div className="summary-item total-row">
                   <span className="total-label">Total a Pagar:</span>
-                  <span className="total-price">S/ {price.toFixed(2)}</span>
+                  <span className="total-price">$ {(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP</span>
                 </div>
               </div>
             </div>
@@ -158,19 +158,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <input
                     type="tel"
                     className="form-input"
-                    placeholder="+51 987 654 321"
+                    placeholder="+56 9 1234 5678"
                     value={passengerPhone}
                     onChange={e => setPassengerPhone(e.target.value)}
                   />
                 </div>
               </div>
 
-              <h3 style={{ marginTop: '1.5rem' }}>💰 Método de Pago (Simulado)</h3>
+              <h3 style={{ marginTop: '1.5rem' }}>💰 Método de Pago (Chile)</h3>
               <div className="payment-methods-grid">
                 {[
-                  { id: 'card', name: 'Tarjeta de Débito / Crédito', icon: '💳' },
-                  { id: 'wallet', name: 'Billetera Digital (Yape / Plin)', icon: '📱' },
-                  { id: 'transfer', name: 'Transferencia Bancaria', icon: '🏦' }
+                  { id: 'card', name: 'Webpay Plus (Débito / Crédito)', icon: '💳' },
+                  { id: 'wallet', name: 'Mercado Pago / CuentaRUT', icon: '📱' },
+                  { id: 'transfer', name: 'Transferencia (BancoEstado / Mach)', icon: '🏦' }
                 ].map(method => (
                   <label 
                     key={method.id} 
@@ -210,7 +210,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               disabled={isProcessing}
               style={{ minWidth: '220px' }}
             >
-              {isProcessing ? '🔄 Procesando Pago...' : `Confirmar y Pagar S/ ${price.toFixed(2)}`}
+              {isProcessing ? '🔄 Procesando Pago...' : `Confirmar y Pagar $ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP`}
             </button>
           </div>
         </form>

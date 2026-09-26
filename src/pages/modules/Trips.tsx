@@ -316,11 +316,11 @@ export const Trips: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="field-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Precio por Asiento (S/)</label>
+                  <label className="field-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Precio por Asiento ($ CLP)</label>
                   <input
                     type="number"
                     className="form-input"
-                    step="0.5"
+                    step="500"
                     value={newTrip.price}
                     onChange={e => setNewTrip({ ...newTrip, price: Number(e.target.value) })}
                   />

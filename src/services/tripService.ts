@@ -3,8 +3,20 @@ import { routeService } from './routeService';
 import { busService } from './busService';
 import { driverService } from './driverService';
 
+let tripsCache: { data: any[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 15000; // 15 segundos de caché
+
 export const tripService = {
-  getAllWithDetails: async () => {
+  clearCache: () => {
+    tripsCache = null;
+  },
+
+  getAllWithDetails: async (forceRefresh = false) => {
+    const now = Date.now();
+    if (!forceRefresh && tripsCache && (now - tripsCache.timestamp < CACHE_TTL_MS)) {
+      return tripsCache.data;
+    }
+
     let dbTrips: any[] = [];
 
     try {
@@ -80,7 +92,8 @@ export const tripService = {
       const bookedCount = allReservations.filter((r: any) => 
         r.trip_id === trip.id || (trip.route_id && r.trip?.route_id === trip.route_id)
       ).length;
-      const basePrice = Number(trip.price) || 35.00;
+      let basePrice = Number(trip.price) || 12000;
+      if (basePrice < 500) basePrice = basePrice * 300; // Convert legacy small values to CLP
 
       return {
         id: trip.id,
@@ -117,8 +130,9 @@ export const tripService = {
         const assignedBus = buses[rIdx % (buses.length || 1)] || { plate: `BUS-00${rIdx + 1}`, model: 'Volvo B8RLE', capacity: 40 };
         const assignedDriver = drivers[rIdx % (drivers.length || 1)] || { full_name: 'Conductor Asignado' };
         
-        // Calcular precio estimado según distancia o duración
-        const price = route.distance_km ? Math.max(25, Math.round(route.distance_km * 1.5)) : 35.00;
+        // Calcular precio estimado en Pesos Chilenos (CLP) según distancia o duración
+        const rawPrice = route.distance_km ? Math.max(6500, Math.round(route.distance_km * 80)) : 12000;
+        const price = rawPrice < 500 ? rawPrice * 300 : rawPrice;
         const capacity = assignedBus.capacity || 40;
 
         // Generar 2 fechas: hoy y mañana
@@ -163,7 +177,9 @@ export const tripService = {
       }
     });
 
-    return [...mappedDbTrips, ...generatedTrips];
+    const result = [...mappedDbTrips, ...generatedTrips];
+    tripsCache = { data: result, timestamp: now };
+    return result;
   },
 
   getAvailableForBooking: async (origin?: string, destination?: string, date?: string) => {
@@ -203,17 +219,21 @@ export const tripService = {
   },
 
   create: async (tripData: any) => {
+    tripService.clearCache();
     const dbStatus = tripData.status === 'Programado' ? 'programado' : (tripData.status || 'programado');
     const isoDeparture = tripData.departure_time 
       ? new Date(tripData.departure_time).toISOString() 
       : new Date().toISOString();
+
+    let priceVal = Number(tripData.price) || 12000;
+    if (priceVal < 500) priceVal = priceVal * 300;
 
     const payload: any = {
       route_id: tripData.route_id || null,
       bus_id: tripData.bus_id || null,
       driver_id: tripData.driver_id || null,
       departure_time: isoDeparture,
-      price: Number(tripData.price) || 35.00,
+      price: priceVal,
       status: dbStatus
     };
 
@@ -242,6 +262,7 @@ export const tripService = {
   },
 
   updateStatus: async (id: string, status: string) => {
+    tripService.clearCache();
     const { data, error } = await supabase
       .from('trips')
       .update({ status })

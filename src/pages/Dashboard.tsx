@@ -247,7 +247,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
             <div className="stat-card">
               <span className="stat-icon" style={{ color: 'var(--primary-color)' }}>💳</span>
               <div className="stat-info">
-                <span className="stat-value">S/ {stats.myTotalSpent.toFixed(2)}</span>
+                <span className="stat-value">$ {Math.round(stats.myTotalSpent < 500 ? stats.myTotalSpent * 300 : stats.myTotalSpent).toLocaleString('es-CL')} CLP</span>
                 <span className="stat-label">Total Invertido</span>
               </div>
             </div>

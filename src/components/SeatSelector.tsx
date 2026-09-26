@@ -75,7 +75,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
                         disabled={isReserved}
                         className={`bus-seat ${isReserved ? 'seat-reserved' : isSelected ? 'seat-selected' : 'seat-available'}`}
                         onClick={() => onSelectSeat(seat.seat_number)}
-                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - S/ ${price.toFixed(2)}`}
+                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - $ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP`}
                       >
                         <span className="seat-num">{seat.seat_number < 10 ? `0${seat.seat_number}` : seat.seat_number}</span>
                       </button>
@@ -99,7 +99,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
                         disabled={isReserved}
                         className={`bus-seat ${isReserved ? 'seat-reserved' : isSelected ? 'seat-selected' : 'seat-available'}`}
                         onClick={() => onSelectSeat(seat.seat_number)}
-                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - S/ ${price.toFixed(2)}`}
+                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - $ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP`}
                       >
                         <span className="seat-num">{seat.seat_number < 10 ? `0${seat.seat_number}` : seat.seat_number}</span>
                       </button>
@@ -128,7 +128,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
         <div>
           <span className="summary-label">Precio:</span>
           <span className="summary-price">
-            {selectedSeatNumber ? `S/ ${price.toFixed(2)}` : 'S/ 0.00'}
+            {selectedSeatNumber ? `$ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP` : '$ 0 CLP'}
           </span>
         </div>
       </div>

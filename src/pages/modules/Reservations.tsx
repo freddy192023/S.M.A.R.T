@@ -90,7 +90,7 @@ export const Reservations: React.FC = () => {
         <div className="stat-card">
           <span className="stat-icon" style={{ color: 'var(--primary-color)' }}>💰</span>
           <div className="stat-info">
-            <span className="stat-value">S/ {totalRevenue.toFixed(2)}</span>
+            <span className="stat-value">$ {Math.round(totalRevenue < 500 ? totalRevenue * 300 : totalRevenue).toLocaleString('es-CL')} CLP</span>
             <span className="stat-label">Ingresos Registrados</span>
           </div>
         </div>
@@ -148,7 +148,7 @@ export const Reservations: React.FC = () => {
                     <td>
                       <span className="badge badge-secondary">N° {res.seat_number}</span>
                     </td>
-                    <td className="text-bold">S/ {Number(res.price).toFixed(2)}</td>
+                    <td className="text-bold">$ {Math.round(Number(res.price) < 500 ? Number(res.price) * 300 : Number(res.price)).toLocaleString('es-CL')} CLP</td>
                     <td>
                       <span className={`badge ${res.status === 'confirmed' ? 'badge-success' : res.status === 'cancelled' ? 'badge-danger' : 'badge-warning'}`}>
                         {res.status === 'confirmed' ? 'Confirmada' : res.status === 'cancelled' ? 'Cancelada' : res.status}

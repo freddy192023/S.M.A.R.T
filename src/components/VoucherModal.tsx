@@ -80,7 +80,7 @@ export const VoucherModal: React.FC<VoucherModalProps> = ({ reservation, onClose
             </div>
             <div className="ticket-field">
               <span className="field-label">Monto Pagado</span>
-              <span className="field-value price-highlight">S/ {Number(reservation.price).toFixed(2)}</span>
+              <span className="field-value price-highlight">$ {(Number(reservation.price || 12000) < 500 ? Number(reservation.price) * 300 : Number(reservation.price)).toLocaleString('es-CL')} CLP</span>
             </div>
             <div className="ticket-field">
               <span className="field-label">Método de Pago</span>

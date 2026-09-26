@@ -181,7 +181,7 @@ export const PassengerManifestModal: React.FC<PassengerManifestModalProps> = ({ 
                       <td style={{ color: 'var(--accent-color)', fontFamily: 'monospace', fontWeight: 'bold' }}>
                         {res.reservation_code}
                       </td>
-                      <td>S/ {Number(res.price || 35).toFixed(2)}</td>
+                      <td>$ {(Number(res.price || 12000) < 500 ? Number(res.price) * 300 : Number(res.price)).toLocaleString('es-CL')} CLP</td>
                       <td>
                         <span className={`badge ${isBoarded ? 'badge-success' : 'badge-warning'}`}>
                           {isBoarded ? 'ABORDADO ✓' : 'PENDIENTE'}

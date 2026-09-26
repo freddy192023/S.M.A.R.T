@@ -285,7 +285,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
                   >
                     <div className="trip-card-header">
                       <span className="trip-route-badge">{trip.route}</span>
-                      <span className="trip-price-tag">S/ {price.toFixed(2)}</span>
+                      <span className="trip-price-tag">$ {(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP</span>
                     </div>
 
                     <div className="trip-card-body">
@@ -354,7 +354,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span className="mini-price">S/ {(selectedTrip.price || 35.00).toFixed(2)}</span>
+                  <span className="mini-price">$ {((selectedTrip.price || 12000) < 500 ? (selectedTrip.price || 35) * 300 : selectedTrip.price || 12000).toLocaleString('es-CL')} CLP</span>
                 </div>
               </div>
 

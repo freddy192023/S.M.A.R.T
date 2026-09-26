@@ -75,7 +75,7 @@ export const OperationalGuideModal: React.FC<OperationalGuideModalProps> = ({ on
         'Selecciona la Ruta creada en el Paso 3.',
         'Asigna un Bus registrado en el Paso 1.',
         'Asigna el Conductor habilitado en el Paso 2.',
-        'Define la Fecha y Hora exacta de salida y el Precio del boleto (S/).'
+        'Define la Fecha y Hora exacta de salida y el Precio del boleto ($ CLP).'
       ],
       tip: '¡Listo! Al guardar, el viaje aparecerá automáticamente en la plataforma para venta de pasajes.'
     },
