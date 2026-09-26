@@ -9,7 +9,7 @@ interface AuthContextType {
   loading: boolean;
   role: AppUser['role'];
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;j
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
