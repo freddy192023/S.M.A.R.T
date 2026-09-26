@@ -225,14 +225,25 @@ export const App: React.FC = () => {
 
   return (
     <div className={`dashboard-wrapper ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      {!sidebarCollapsed && (
+        <div 
+          className="sidebar-backdrop"
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
       <Sidebar 
         activeView={activeView} 
-        setActiveView={changeView} 
+        setActiveView={(view) => {
+          changeView(view);
+          if (window.innerWidth < 768) {
+            setSidebarCollapsed(true);
+          }
+        }} 
         currentUser={profile} 
         collapsed={sidebarCollapsed}
       />
 
-      <div className="main-content" style={{ marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)' }}>
+      <div className="main-content">
         <header className="topbar">
           <div className="topbar-left">
             <button className="sidebar-toggle" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>☰</button>

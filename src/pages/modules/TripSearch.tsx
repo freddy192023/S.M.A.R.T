@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Trip, Seat, Reservation } from '../../types';
 import { tripService } from '../../services/tripService';
 import { seatService } from '../../services/seatService';
@@ -15,6 +15,7 @@ interface TripSearchProps {
 export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
   const { profile } = useAuth();
   const { showNotification } = useNotification();
+  const seatSectionRef = useRef<HTMLDivElement>(null);
 
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -92,6 +93,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
     setSelectedTrip(trip);
     setSelectedSeatNumber(null);
     setLoadingSeats(true);
+
+    // Auto-scroll suave hacia el diagrama de asientos
+    setTimeout(() => {
+      if (seatSectionRef.current) {
+        seatSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+
     try {
       const tripSeats = await seatService.getSeatsByTrip(
         trip.id,
@@ -341,7 +350,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
         </div>
 
         {/* Columna Derecha: Diagrama de Asientos & Checkout */}
-        <div className="seats-selection-column">
+        <div className="seats-selection-column" ref={seatSectionRef}>
           {selectedTrip ? (
             <div className="content-card" style={{ padding: '1.5rem', position: 'sticky', top: '90px' }}>
               <div className="selected-trip-mini-banner">
