@@ -18,7 +18,7 @@
  *   Supabase no se interrumpe.
  */
 
-const MESSAGING_API = 'http://localhost:8080/api';
+const MESSAGING_API = '/api';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -140,7 +140,7 @@ export async function confirmarReservaConRPC(datos: {
   asiento: string;
   pasajero: string;
 }): Promise<ConfirmarReservaResult> {
-  const res = await fetch(`${MESSAGING_API}/reservations/confirmar`, {
+  const res = await fetch(`${MESSAGING_API}/confirmar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos),
