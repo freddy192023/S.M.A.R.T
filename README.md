@@ -2,9 +2,10 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/versión-2.0.0-00d2c4?style=for-the-badge&labelColor=0a0e1a)
+![Version](https://img.shields.io/badge/versión-2.1.0-00d2c4?style=for-the-badge&labelColor=0a0e1a)
 ![Stack](https://img.shields.io/badge/React_19-TypeScript_6-3178c6?style=for-the-badge&labelColor=0a0e1a)
 ![Backend](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=for-the-badge&labelColor=0a0e1a)
+![Messaging](https://img.shields.io/badge/RabbitMQ-Spring_Boot_3-FF6600?style=for-the-badge&labelColor=0a0e1a)
 ![Deploy](https://img.shields.io/badge/Vercel-Producción-000000?style=for-the-badge&labelColor=0a0e1a)
 ![License](https://img.shields.io/badge/Licencia-MIT-green?style=for-the-badge&labelColor=0a0e1a)
 
@@ -21,12 +22,12 @@
 - [Descripción General](#-descripción-general)
 - [Problema que Resuelve](#-problema-que-resuelve)
 - [Proceso Principal del Sistema](#-proceso-principal-del-sistema)
-- [Manual de Defensa Técnica y Auditoría](DEFENSA_TECNICA.md)
 - [Tipos de Usuarios y Roles](#-tipos-de-usuarios-y-roles-rbac)
 - [Módulos del Sistema](#-módulos-del-sistema)
 - [Sistema de Asientos](#-sistema-de-asientos-nuevo)
 - [Sistema de Reservas](#-sistema-de-reservas-nuevo)
 - [Arquitectura del Software](#️-arquitectura-del-software)
+- [🐇 Módulo de Mensajería RabbitMQ](#-módulo-de-mensajería-rabbitmq-nuevo)
 - [Stack Tecnológico](#-stack-tecnológico)
 - [Base de Datos](#️-base-de-datos)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
@@ -816,6 +817,204 @@ npm run dev
 
 ---
 
+## 🐇 Módulo de Mensajería RabbitMQ _(nuevo)_
+
+S.M.A.R.T. incorpora un **módulo de mensajería asíncrona y síncrona** basado en **RabbitMQ + Spring Boot 3** que se integra de forma lateral al frontend React existente. Este módulo desacopla los post-procesos críticos del flujo principal de reservas.
+
+### 🎯 ¿Por qué RabbitMQ?
+
+Antes de este módulo, acciones como confirmar una reserva requerían esperar de forma secuencial: guardar en Supabase → generar comprobante → enviar email. Con RabbitMQ, el usuario recibe respuesta inmediata y los post-procesos ocurren en paralelo en background.
+
+---
+
+### 📦 Componentes del Módulo
+
+| Componente | Tipo | Propósito |
+|---|---|---|
+| `EventPublisher` | 🟢 Asíncrono | Publica eventos al Topic Exchange sin bloquear al usuario |
+| `ReservaEventConsumer` | 🟢 Asíncrono | Escucha `reserva.creada` → dispara email + PDF + auditoría |
+| `LogConsumer` | 🟢 Asíncrono | Monitoreo de logs `INFO`, `WARNING`, `ERROR` en tiempo real |
+| `ViajeEventConsumer` | 🟢 Asíncrono | Notifica al conductor cuando se programa un viaje |
+| `SeatCheckRpcServer` | 🔵 Síncrono | Responde si un asiento está disponible u ocupado |
+| `SeatCheckRpcClient` | 🔵 Síncrono | Envía petición y **espera** la respuesta antes de continuar |
+| `EventController` | REST API | Punto de entrada HTTP para publicar eventos desde el frontend |
+| `ReservationController` | REST API | Flujo completo: RPC síncrono + evento asíncrono combinados |
+
+---
+
+### 🏗️ Arquitectura de Mensajería
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ⚛️  React Frontend (:5173)                   │
+│   eventService.ts → publicarReserva() / confirmarReservaRPC()   │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │ HTTP POST
+┌──────────────────────▼──────────────────────────────────────────┐
+│              🆕 smart-messaging (Spring Boot :8080)              │
+│                                                                  │
+│  EventController          ReservationController                  │
+│       │                          │                              │
+│  EventPublisher          SeatCheckRpcClient ←──→ SeatCheckRpcServer
+│       │                    (bloquea)              (responde)    │
+│       │                          │                              │
+│  ┌────▼──────────────────────────▼────────────────────────┐    │
+│  │           RabbitMQ Broker — Topic Exchange              │    │
+│  │                                                          │    │
+│  │  reserva.creada ──→ [reserva_creada_queue]              │    │
+│  │  reserva.cancelada → [reserva_cancelada_queue]          │    │
+│  │  viaje.programado ─→ [viaje_programado_queue]           │    │
+│  │  log.*  ──────────→ [logs_queue]                        │    │
+│  │  log.error ────────→ [errors_only_queue]                │    │
+│  │  seat_check_rpc ──→ [seat_check_rpc_queue]              │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  Consumidores:                                                   │
+│  📧 Email  📄 PDF  📝 Auditoría  🔓 Libera Asiento  🚍 Conductor │
+│  📊 Monitor General  🚨 Alerta Crítica                          │
+└─────────────────────────────────────────────────────────────────┘
+                       │
+              ┌────────▼───────┐
+              │  🗄️ Supabase   │
+              │  PostgreSQL    │
+              └────────────────┘
+```
+
+---
+
+### 🟢 Mensajería Asíncrona (Pub/Sub)
+
+Un solo evento `reserva.creada` desencadena **3 consumidores en paralelo** sin bloquear al usuario:
+
+```
+Usuario confirma reserva
+        │
+        ▼
+  [SMART-ASYNC] ✅ Evento publicado → reserva.creada  ← retorna INMEDIATAMENTE
+        │
+        ├──▶ [EMAIL]     ✉ Enviando confirmación al pasajero
+        ├──▶ [PDF]       📄 Generando comprobante de reserva
+        └──▶ [AUDITORIA] 📝 Registrando en bitácora
+```
+
+**Routing Keys configuradas:**
+
+| Routing Key | Cola Destino | Consumidor |
+|---|---|---|
+| `reserva.creada` | `reserva_creada_queue` | Email + PDF + Auditoría |
+| `reserva.cancelada` | `reserva_cancelada_queue` | Liberación de asiento |
+| `viaje.programado` | `viaje_programado_queue` | Notificación conductor |
+| `log.*` | `logs_queue` | Monitor general (todos los niveles) |
+| `log.error` | `errors_only_queue` | Alerta crítica (solo errores) |
+
+---
+
+### 🔵 Mensajería Síncrona — Patrón RPC
+
+Antes de confirmar una reserva, el sistema **verifica síncronamente** si el asiento está disponible. El hilo queda bloqueado hasta recibir respuesta, previniendo condiciones de carrera:
+
+```
+Frontend solicita reserva asiento #4 en viaje V-001
+        │
+        ▼
+[RPC-CLIENT] 📨 Enviando petición: V-001:4
+        │  (el hilo ESPERA aquí)
+        ▼
+[RPC-SERVER] 🔍 Verificando disponibilidad en BD
+[RPC-SERVER] 📤 Respondiendo: DISPONIBLE:V-001:4
+        │
+        ▼
+[RPC-CLIENT] ✅ Respuesta recibida → continúa
+        │
+        ▼
+[SMART-ASYNC] Publica reserva.creada (asíncrono)
+```
+
+> **Si el asiento está ocupado** → responde `OCUPADO:V-001:4` → el endpoint retorna HTTP 400 sin publicar ningún evento.
+
+---
+
+### 🌐 Endpoints REST del Módulo
+
+| Método | Endpoint | Tipo | Descripción |
+|---|---|---|---|
+| `POST` | `/api/events/reserva` | 🟢 Asíncrono | Publica evento `reserva.creada` |
+| `POST` | `/api/events/cancelacion` | 🟢 Asíncrono | Publica evento `reserva.cancelada` |
+| `POST` | `/api/events/viaje` | 🟢 Asíncrono | Publica evento `viaje.programado` |
+| `POST` | `/api/events/log` | 🟢 Asíncrono | Publica log (`info`/`warning`/`error`) |
+| `POST` | `/api/reservations/confirmar` | 🔵+🟢 Combinado | RPC verifica + evento asíncrono |
+
+---
+
+### 🧪 Pruebas del Módulo
+
+**Test 1 — Asíncrono puro (3 consumidores simultáneos):**
+```bash
+curl -X POST http://localhost:8080/api/events/reserva \
+  -H "Content-Type: application/json" \
+  -d '{"viajeId":"V-001","asiento":"4","pasajero":"Ana López"}'
+# Retorna inmediatamente → consumidores trabajan en background
+```
+
+**Test 2 — RPC Síncrono + Asíncrono (asiento disponible):**
+```bash
+curl -X POST http://localhost:8080/api/reservations/confirmar \
+  -H "Content-Type: application/json" \
+  -d '{"viajeId":"V-001","asiento":"4","pasajero":"Ana"}'
+# → Verifica síncronamente → confirma → dispara eventos asíncronos
+```
+
+**Test 3 — RPC rechaza asiento ocupado:**
+```bash
+curl -X POST http://localhost:8080/api/reservations/confirmar \
+  -H "Content-Type: application/json" \
+  -d '{"viajeId":"V-001","asiento":"5","pasajero":"Ana"}'
+# → HTTP 400: ❌ Asiento ya ocupado (verificado síncronamente por RPC)
+```
+
+**Test 4 — Sistema de logs (dos consumidores simultáneos):**
+```bash
+curl -X POST http://localhost:8080/api/events/log \
+  -H "Content-Type: application/json" \
+  -d '{"nivel":"error","mensaje":"No se pudo conectar a Supabase"}'
+# → [MONITOR GENERAL] + [🚨 ALERTA CRÍTICA] reaccionan al mismo mensaje
+```
+
+---
+
+### 🚀 Arrancar el Módulo de Mensajería
+
+```bash
+# Terminal 1 — Levantar RabbitMQ en Docker
+cd smart-messaging
+docker-compose up -d
+# Panel admin → http://localhost:15672 (guest/guest)
+
+# Terminal 2 — Arrancar Spring Boot
+mvn spring-boot:run
+# API REST → http://localhost:8080
+
+# Terminal 3 — Frontend React (sin cambios)
+npm run dev
+# UI → http://localhost:5173
+```
+
+---
+
+### 📊 Comparativa de Patrones
+
+| Aspecto | 🟢 Asíncrono (Pub/Sub) | 🔵 Síncrono (RPC) |
+|---|---|---|
+| **Bloquea el hilo** | ❌ No | ✅ Sí, hasta respuesta |
+| **Caso de uso** | Email, PDF, logs, auditoría | Verificar asiento antes de reservar |
+| **Tolerancia a fallos** | Alta (cola persiste si consumidor cae) | Limitada (timeout si server no responde) |
+| **Escalabilidad** | Excelente (N consumidores en paralelo) | Moderada (depende de latencia de red) |
+| **En S.M.A.R.T.** | Post-procesos de reserva/cancelación | Validación crítica de disponibilidad |
+
+> 💡 **Diseño resiliente:** Si el módulo `smart-messaging` no está activo, el frontend detecta el error silenciosamente y la reserva igual se guarda en Supabase. RabbitMQ añade capacidades, pero su ausencia no interrumpe el flujo principal.
+
+---
+
 ## 🗺️ Hoja de Ruta — Roadmap
 
 ### 📌 v2.0.0 — Sistema de Reservas (En desarrollo)
@@ -829,13 +1028,22 @@ npm run dev
 - [ ] **Vista de pasajeros por viaje** para el conductor
 - [ ] **Reportes ampliados** con ocupación y reservas
 
-### 📌 v2.1.0 — Mejoras de UX
+### 📌 v2.1.0 — Módulo de Mensajería (Implementado ✅)
+- [x] **RabbitMQ** con Topic Exchange y 5 colas de eventos
+- [x] **Mensajería asíncrona** (Pub/Sub): email, PDF, auditoría, logs
+- [x] **Mensajería síncrona** (RPC): verificación de asiento antes de reservar
+- [x] **Flujo combinado**: RPC síncrono → evento asíncrono en la misma transacción
+- [x] **Sistema de logs** con niveles `INFO`, `WARNING`, `ERROR` y doble consumidor
+- [x] **Integración con frontend React** via `eventService.ts`
+- [x] **Diseño resiliente**: el módulo es opcional, sin romper flujo principal
+
+### 📌 v2.2.0 — Mejoras de UX
 - [ ] **Filtros avanzados** en tablas (por estado, fecha, ruta)
 - [ ] **Paginación** en listados con muchos registros
 - [ ] **Edición de perfil** con carga de avatar
 - [ ] **Modo claro/oscuro** con toggle
 
-### 📌 v2.2.0 — Calidad de Software y Testing
+### 📌 v2.3.0 — Calidad de Software y Testing
 - [ ] **Pruebas unitarias** con Vitest + React Testing Library
 - [ ] **Pruebas de integración** para flujos de autenticación y reservas
 - [ ] **Pruebas E2E** con Playwright para el flujo completo de reserva
@@ -843,7 +1051,7 @@ npm run dev
 
 ### 📌 v3.0.0 — Plataforma Completa
 - [ ] **Pasarela de pago real** (Stripe, Mercado Pago o similar)
-- [ ] **Notificaciones por correo** al confirmar o cancelar una reserva
+- [ ] **Notificaciones reales por correo** vía consumidor RabbitMQ (SendGrid/Mailgun)
 - [ ] **Row Level Security (RLS)** activada en Supabase
 - [ ] **Exportación de reportes** a PDF y Excel
 - [ ] **Aplicación móvil** (React Native) para conductores y pasajeros
@@ -855,9 +1063,9 @@ npm run dev
 | Campo | Detalle |
 |---|---|
 | **Plataforma** | Sistema Web para Gestión de Transporte Privado |
-| **Versión** | 2.0.0 |
-| **Arquitectura** | Frontend SPA (React 19) + Cloud Backend (Supabase PostgreSQL) |
-| **Tipo de despliegue** | CI/CD Automático en Vercel |
+| **Versión** | 2.1.0 |
+| **Arquitectura** | SPA React 19 + Supabase (BaaS) + Módulo de Mensajería Spring Boot + RabbitMQ |
+| **Tipo de despliegue** | CI/CD Automático en Vercel (frontend) + Docker (RabbitMQ) |
 | **Metodología** | Desarrollo Ágil e Incremental |
 
 ### Capacidades del sistema:
@@ -870,10 +1078,22 @@ npm run dev
 - ✅ Control de acceso basado en roles (RBAC)
 - ✅ Modelado de procesos de negocio (reserva de viajes)
 - ✅ Diseño UX/UI con sistema de diseño moderno
+- ✅ **Mensajería asíncrona** (Pub/Sub) con RabbitMQ — email, PDF, auditoría, logs
+- ✅ **Mensajería síncrona** (RPC) con RabbitMQ — verificación de asientos en tiempo real
+- ✅ **Arquitectura desacoplada** — post-procesos independientes del flujo principal
 
 ---
 
 ## 📦 Historial de Versiones
+
+### v2.1.0
+- ✅ **Módulo de Mensajería RabbitMQ** (Spring Boot 3 + Docker)
+- ✅ Topic Exchange con 5 colas: `reserva_creada`, `reserva_cancelada`, `viaje_programado`, `logs`, `errors`
+- ✅ Patrón Pub/Sub asíncrono: 3 consumidores paralelos por evento de reserva (email, PDF, auditoría)
+- ✅ Patrón RPC síncrono: verificación de asiento antes de confirmar reserva
+- ✅ Sistema de logs con niveles INFO/WARNING/ERROR y doble consumidor
+- ✅ Integración TypeScript (`eventService.ts`) con el frontend React sin romper funcionalidad existente
+- ✅ Diseño resiliente: el módulo es opcional, el flujo principal no depende de él
 
 ### v2.0.0 (En desarrollo)
 - 🔄 Nuevo modelo de negocio: transporte privado de pasajeros con reserva de asientos

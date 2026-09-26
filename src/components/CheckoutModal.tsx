@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Trip, User, Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
 import { useNotification } from '../context/NotificationContext';
+import { publicarReservaCreada, publicarLog } from '../lib/eventService';
 
 interface CheckoutModalProps {
   trip: Trip;
@@ -51,6 +52,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         passenger_email: passengerEmail,
         passenger_phone: passengerPhone
       });
+
+      // 🟢 Publicar evento asíncrono a RabbitMQ (CloudAMQP) para email, PDF y auditoría
+      publicarReservaCreada({
+        viajeId: trip.id,
+        asiento: selectedSeat,
+        pasajero: passengerName,
+        reservaCode: newReservation.reservation_code
+      });
+
+      publicarLog('info', `Reserva ${newReservation.reservation_code} confirmada para ${passengerName} (${passengerEmail})`);
 
       showNotification(
         '¡Reserva Exitosa!',
