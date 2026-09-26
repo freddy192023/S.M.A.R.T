@@ -29,7 +29,7 @@ public class RpcConfig {
 
     public static final String SEAT_CHECK_QUEUE = "seat_check_rpc_queue";
 
-    // Cola no durable (se puede perder si RabbitMQ reinicia — OK para RPC temporal)
+    // Cola RPC síncrona
     @Bean
     public Queue seatCheckQueue() {
         return new Queue(SEAT_CHECK_QUEUE, false);
