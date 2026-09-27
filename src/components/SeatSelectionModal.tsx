@@ -25,26 +25,24 @@ export const SeatSelectionModal: React.FC<SeatSelectionModalProps> = ({
   const totalPrice = unitPrice * selectedSeats.length;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose}>
       <div 
-        className="modal-dialog" 
-        style={{ maxWidth: '500px', width: '92%', padding: '1.5rem', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }} 
+        className="checkout-modal-content" 
+        style={{ maxWidth: '580px', width: '92%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }} 
         onClick={e => e.stopPropagation()}
       >
-        <div className="modal-header" style={{ marginBottom: '1rem' }}>
-          <div>
-            <h2 style={{ fontSize: '1.3rem' }}>💺 Selección de Asientos</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-              {trip.route} · {trip.date} a las {trip.time}
-            </p>
+        <div className="checkout-header">
+          <div className="checkout-title-group">
+            <h2>💺 Distribución y Selección de Asientos</h2>
+            <p>{trip.route || `${trip.origin} → ${trip.destination}`} · {trip.date} a las {trip.time}</p>
           </div>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
-        <div className="modal-body" style={{ flex: 1, overflowY: 'auto', paddingRight: '0.3rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
           {loadingSeats ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-              ⏳ Cargando distribución de asientos del bus...
+              ⏳ Cargando disponibilidad del bus...
             </div>
           ) : (
             <SeatSelector
@@ -56,7 +54,7 @@ export const SeatSelectionModal: React.FC<SeatSelectionModalProps> = ({
           )}
         </div>
 
-        <div className="modal-footer" style={{ marginTop: '1.25rem', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', background: 'var(--bg-secondary)' }}>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Cancelar
           </button>
@@ -68,7 +66,7 @@ export const SeatSelectionModal: React.FC<SeatSelectionModalProps> = ({
             style={{ flex: 1, justifyContent: 'center' }}
           >
             {selectedSeats.length > 0
-              ? `Continuar a Pagar ($ ${totalPrice.toLocaleString('es-CL')} CLP) →`
+              ? `Continuar a Pagar (${selectedSeats.length} asiento${selectedSeats.length > 1 ? 's' : ''} - $ ${totalPrice.toLocaleString('es-CL')} CLP) →`
               : 'Elige al menos 1 asiento'}
           </button>
         </div>
