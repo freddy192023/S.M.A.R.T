@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Trip, Seat, Reservation } from '../../types';
 import { tripService } from '../../services/tripService';
 import { seatService } from '../../services/seatService';
 import { SeatSelector } from '../../components/SeatSelector';
+import { SeatSelectionModal } from '../../components/SeatSelectionModal';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { VoucherModal } from '../../components/VoucherModal';
 import { useAuth } from '../../context/AuthContext';
@@ -15,7 +16,6 @@ interface TripSearchProps {
 export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
   const { profile } = useAuth();
   const { showNotification } = useNotification();
-  const seatSectionRef = useRef<HTMLDivElement>(null);
 
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -30,10 +30,11 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
   // Estados del flujo de reserva
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
-  const [selectedSeatNumber, setSelectedSeatNumber] = useState<number | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [loadingSeats, setLoadingSeats] = useState(false);
 
   // Modales
+  const [showSeatModal, setShowSeatModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null);
 
@@ -69,14 +70,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSelectedTrip(null);
-    setSelectedSeatNumber(null);
+    setSelectedSeats([]);
     loadTrips(origin, destination, date);
   };
 
   const handleQuickFilter = (dest: string) => {
     setDestination(dest);
     setSelectedTrip(null);
-    setSelectedSeatNumber(null);
+    setSelectedSeats([]);
     loadTrips(origin, dest, date);
   };
 
@@ -85,27 +86,21 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
     setDestination('');
     setDate('');
     setSelectedTrip(null);
-    setSelectedSeatNumber(null);
+    setSelectedSeats([]);
     loadTrips('', '', '');
   };
 
   const handleSelectTrip = async (trip: Trip) => {
     setSelectedTrip(trip);
-    setSelectedSeatNumber(null);
+    setSelectedSeats([]);
     setLoadingSeats(true);
-
-    // Auto-scroll suave hacia el diagrama de asientos
-    setTimeout(() => {
-      if (seatSectionRef.current) {
-        seatSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
+    setShowSeatModal(true); // Abrir directamente en ventana emergente (modal)
 
     try {
       const tripSeats = await seatService.getSeatsByTrip(
         trip.id,
         trip.bus_capacity || 40,
-        trip.price || 35.00
+        trip.price || 12000
       );
       setSeats(tripSeats);
 
@@ -128,17 +123,26 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
     }
   };
 
+  const handleToggleSeat = (seatNumber: number) => {
+    setSelectedSeats(prev => 
+      prev.includes(seatNumber) 
+        ? prev.filter(s => s !== seatNumber) 
+        : [...prev, seatNumber]
+    );
+  };
+
   const handleProceedToCheckout = () => {
-    if (!selectedSeatNumber) {
-      showNotification('Selección Requerida', 'Por favor selecciona un asiento disponible en el diagrama del bus.', 'warning');
+    if (selectedSeats.length === 0) {
+      showNotification('Selección Requerida', 'Por favor selecciona al menos un asiento disponible en el bus.', 'warning');
       return;
     }
+    setShowSeatModal(false);
     setShowCheckout(true);
   };
 
   const handleCheckoutSuccess = (reservation: Reservation) => {
     setShowCheckout(false);
-    setSelectedSeatNumber(null);
+    setSelectedSeats([]);
     setSelectedTrip(null);
     setCompletedReservation(reservation);
     // Recargar viajes y disponibilidad
@@ -247,170 +251,120 @@ export const TripSearch: React.FC<TripSearchProps> = ({ setActiveView }) => {
         )}
       </div>
 
-      {/* Grid Principal: Listado de Viajes vs Selector de Asientos */}
-      <div className="booking-workspace-grid">
-        {/* Columna Izquierda: Resultados de Viajes */}
-        <div className="trips-results-column">
-          <div className="results-header">
-            <h3>Itinerarios Disponibles ({trips.length})</h3>
-            {(origin || destination || date) && (
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setOrigin('');
-                  setDestination('');
-                  setDate('');
-                  setTimeout(loadTrips, 0);
-                }}
-              >
-                Limpiar Filtros
-              </button>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="content-card" style={{ padding: '3rem', textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-muted)' }}>⏳ Buscando viajes disponibles en el sistema...</p>
-            </div>
-          ) : trips.length === 0 ? (
-            <div className="content-card" style={{ padding: '3rem', textAlign: 'center' }}>
-              <span style={{ fontSize: '2.5rem' }}>🚍</span>
-              <h3 style={{ marginTop: '1rem' }}>No se encontraron viajes</h3>
-              <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                No hay viajes programados que coincidan con tu búsqueda. Prueba con otras fechas u orígenes.
-              </p>
-            </div>
-          ) : (
-            <div className="available-trips-list">
-              {trips.map(trip => {
-                const isSelected = selectedTrip?.id === trip.id;
-                const price = trip.price || 35.00;
-
-                return (
-                  <div
-                    key={trip.id}
-                    className={`trip-booking-card ${isSelected ? 'active-selection' : ''}`}
-                    onClick={() => handleSelectTrip(trip)}
-                  >
-                    <div className="trip-card-header">
-                      <span className="trip-route-badge">{trip.route}</span>
-                      <span className="trip-price-tag">$ {(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP</span>
-                    </div>
-
-                    <div className="trip-card-body">
-                      <div className="route-endpoints">
-                        <div className="endpoint origin">
-                          <span className="point-dot"></span>
-                          <div>
-                            <span className="point-city">{trip.origin}</span>
-                            <span className="point-time">{trip.date} · {trip.time}</span>
-                          </div>
-                        </div>
-
-                        <div className="endpoint-separator">
-                          <span className="arrow-line">──────►</span>
-                        </div>
-
-                        <div className="endpoint destination">
-                          <span className="point-dot destination-dot"></span>
-                          <div>
-                            <span className="point-city">{trip.destination}</span>
-                            <span className="point-time">Llegada estimada</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="trip-card-meta">
-                        <span>🚌 Bus: <strong>{trip.bus}</strong> ({trip.bus_model})</span>
-                        <span>👨‍✈️ Chofer: <strong>{trip.conductor}</strong></span>
-                        <span className="seats-avail-badge">
-                          💺 {trip.available_seats} asientos libres
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="trip-card-footer">
-                      <button
-                        type="button"
-                        className={`btn ${isSelected ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-                        style={{ width: '100%' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectTrip(trip);
-                        }}
-                      >
-                        {isSelected ? '✓ Viaje Seleccionado' : 'Elegir Asiento →'}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Columna Derecha: Diagrama de Asientos & Checkout */}
-        <div className="seats-selection-column" ref={seatSectionRef}>
-          {selectedTrip ? (
-            <div className="content-card" style={{ padding: '1.5rem', position: 'sticky', top: '90px' }}>
-              <div className="selected-trip-mini-banner">
-                <div>
-                  <span className="mini-label">Viaje Seleccionado:</span>
-                  <h4>{selectedTrip.route}</h4>
-                  <p>{selectedTrip.date} a las {selectedTrip.time}</p>
-                  <span className="badge badge-success" style={{ marginTop: '0.4rem', display: 'inline-block' }}>
-                    💺 {selectedTrip.available_seats} libres de {selectedTrip.bus_capacity || 40}
-                  </span>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span className="mini-price">$ {((selectedTrip.price || 12000) < 500 ? (selectedTrip.price || 35) * 300 : selectedTrip.price || 12000).toLocaleString('es-CL')} CLP</span>
-                </div>
-              </div>
-
-              {loadingSeats ? (
-                <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  ⏳ Cargando distribución de asientos...
-                </div>
-              ) : (
-                <>
-                  <SeatSelector
-                    seats={seats}
-                    selectedSeatNumber={selectedSeatNumber}
-                    onSelectSeat={(seatNum) => setSelectedSeatNumber(seatNum)}
-                    price={selectedTrip.price || 35.00}
-                  />
-
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{ width: '100%', padding: '0.9rem 1.5rem', fontSize: '1rem' }}
-                      disabled={!selectedSeatNumber}
-                      onClick={handleProceedToCheckout}
-                    >
-                      {selectedSeatNumber
-                        ? `Continuar con Asiento N° ${selectedSeatNumber} →`
-                        : 'Selecciona un asiento arriba'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="content-card seat-placeholder-card">
-              <span className="placeholder-icon">💺</span>
-              <h3>Selecciona un Viaje</h3>
-              <p>Elige un itinerario de la lista para ver la distribución de asientos y reservar tu lugar.</p>
-            </div>
-          )}
-        </div>
+      {/* Listado de Viajes Disponibles */}
+      <div className="results-header" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3>Itinerarios Disponibles ({trips.length})</h3>
+        {(origin || destination || date) && (
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleResetFilters}
+          >
+            Limpiar Filtros
+          </button>
+        )}
       </div>
 
+      {loading ? (
+        <div className="content-card" style={{ padding: '3rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-muted)' }}>⏳ Buscando viajes disponibles en el sistema...</p>
+        </div>
+      ) : trips.length === 0 ? (
+        <div className="content-card" style={{ padding: '3rem', textAlign: 'center' }}>
+          <span style={{ fontSize: '2.5rem' }}>🚍</span>
+          <h3 style={{ marginTop: '1rem' }}>No se encontraron viajes</h3>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            No hay viajes programados que coincidan con tu búsqueda. Prueba con otras fechas u orígenes.
+          </p>
+          <button className="btn btn-secondary" style={{ marginTop: '1rem' }} onClick={handleResetFilters}>
+            Ver Todos los Viajes Disponibles
+          </button>
+        </div>
+      ) : (
+        <div className="trips-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          {trips.map(trip => {
+            const isSelected = selectedTrip?.id === trip.id;
+            const price = trip.price || 12000;
+            const unitPrice = price < 500 ? price * 300 : price;
+
+            return (
+              <div
+                key={trip.id}
+                className={`trip-booking-card ${isSelected ? 'active-selection' : ''}`}
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: isSelected ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div className="trip-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="badge badge-primary">{trip.route}</span>
+                  <span style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-color)' }}>
+                    $ {unitPrice.toLocaleString('es-CL')} CLP
+                  </span>
+                </div>
+
+                <div className="trip-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>ORIGEN</span>
+                      <strong>{trip.origin}</strong>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--accent-color)', marginTop: '2px' }}>{trip.date} · {trip.time}</div>
+                    </div>
+                    <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>➔</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>DESTINO</span>
+                      <strong>{trip.destination}</strong>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>Estimada</div>
+                    </div>
+                  </div>
+
+                  <div className="trip-card-meta" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <span>🚌 {trip.bus} ({trip.bus_model})</span>
+                    <span className="badge badge-success">
+                      💺 {trip.available_seats} asientos libres
+                    </span>
+                  </div>
+                </div>
+
+                <div className="trip-card-footer">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ width: '100%', padding: '0.8rem 1rem', fontSize: '0.95rem' }}
+                    onClick={() => handleSelectTrip(trip)}
+                  >
+                    💺 Elegir Asientos →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal Emergente de Selección de Asientos (Pop-Up Window) */}
+      {showSeatModal && selectedTrip && (
+        <SeatSelectionModal
+          trip={selectedTrip}
+          seats={seats}
+          selectedSeats={selectedSeats}
+          onToggleSeat={handleToggleSeat}
+          loadingSeats={loadingSeats}
+          onClose={() => setShowSeatModal(false)}
+          onConfirm={handleProceedToCheckout}
+        />
+      )}
+
       {/* Modal de Pago / Checkout */}
-      {showCheckout && selectedTrip && selectedSeatNumber && profile && (
+      {showCheckout && selectedTrip && selectedSeats.length > 0 && profile && (
         <CheckoutModal
           trip={selectedTrip}
-          selectedSeat={selectedSeatNumber}
+          selectedSeats={selectedSeats}
           currentUser={profile}
           onClose={() => setShowCheckout(false)}
           onSuccess={handleCheckoutSuccess}

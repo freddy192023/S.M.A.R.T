@@ -65,9 +65,9 @@ export const VoucherModal: React.FC<VoucherModalProps> = ({ reservation, onClose
               <span className="field-value text-accent">{trip?.time || '08:00'}</span>
             </div>
             <div className="ticket-field">
-              <span className="field-label">Asiento N°</span>
+              <span className="field-label">Asiento(s) N°</span>
               <span className="field-value seat-highlight">
-                {reservation.seat_number < 10 ? `0${reservation.seat_number}` : reservation.seat_number}
+                {(reservation as any).combined_seats_str || (reservation.seat_number < 10 ? `0${reservation.seat_number}` : reservation.seat_number)}
               </span>
             </div>
             <div className="ticket-field">
@@ -80,7 +80,7 @@ export const VoucherModal: React.FC<VoucherModalProps> = ({ reservation, onClose
             </div>
             <div className="ticket-field">
               <span className="field-label">Monto Pagado</span>
-              <span className="field-value price-highlight">$ {(Number(reservation.price || 12000) < 500 ? Number(reservation.price) * 300 : Number(reservation.price)).toLocaleString('es-CL')} CLP</span>
+              <span className="field-value price-highlight">$ {((reservation as any).total_price_calculated || (Number(reservation.price || 12000) < 500 ? Number(reservation.price) * 300 : Number(reservation.price))).toLocaleString('es-CL')} CLP</span>
             </div>
             <div className="ticket-field">
               <span className="field-label">Método de Pago</span>

@@ -6,7 +6,7 @@ import { publicarReservaCreada, publicarLog } from '../lib/eventService';
 
 interface CheckoutModalProps {
   trip: Trip;
-  selectedSeat: number;
+  selectedSeats: number[];
   currentUser: User;
   onClose: () => void;
   onSuccess: (reservation: Reservation) => void;
@@ -14,7 +14,7 @@ interface CheckoutModalProps {
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   trip,
-  selectedSeat,
+  selectedSeats,
   currentUser,
   onClose,
   onSuccess
@@ -23,16 +23,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [passengerName, setPassengerName] = useState(currentUser.full_name || currentUser.name || '');
   const [passengerEmail, setPassengerEmail] = useState(currentUser.email || '');
   const [passengerPhone, setPassengerPhone] = useState(currentUser.phone || '');
-  const [paymentMethod, setPaymentMethod] = useState('Tarjeta de Débito/Crédito');
+  const [paymentMethod, setPaymentMethod] = useState('Webpay Plus (Débito / Crédito)');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const price = trip.price || 35.00;
+  const unitPrice = (trip.price || 12000) < 500 ? (trip.price || 35) * 300 : trip.price || 12000;
+  const totalPrice = unitPrice * selectedSeats.length;
+  const sortedSeats = [...selectedSeats].sort((a, b) => a - b);
+  const seatsFormattedStr = sortedSeats.map(n => `N° ${n}`).join(', ');
 
   const handleConfirmPayment = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!passengerName.trim() || !passengerEmail.trim()) {
-      showNotification('Datos Requeridos', 'Por favor completa tu nombre y correo para emitir el boleto.', 'warning');
+      showNotification('Datos Requeridos', 'Por favor completa tu nombre y correo para emitir los boletos.', 'warning');
+      return;
+    }
+
+    if (selectedSeats.length === 0) {
+      showNotification('Sin Asientos', 'Debes seleccionar al menos un asiento.', 'warning');
       return;
     }
 
@@ -42,37 +50,49 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       // Simular tiempo de procesamiento de pago
       await new Promise(resolve => setTimeout(resolve, 1200));
 
-      const newReservation = await reservationService.create({
-        passenger_id: currentUser.id,
-        trip_id: trip.id,
-        seat_number: selectedSeat,
-        price: price,
-        payment_method: paymentMethod,
-        passenger_name: passengerName,
-        passenger_email: passengerEmail,
-        passenger_phone: passengerPhone
-      });
+      const createdReservations: Reservation[] = [];
 
-      // 🟢 Publicar evento asíncrono a RabbitMQ (CloudAMQP) para email, PDF y auditoría
-      publicarReservaCreada({
-        viajeId: trip.id,
-        asiento: selectedSeat,
-        pasajero: passengerName,
-        reservaCode: newReservation.reservation_code
-      });
+      for (const seatNum of sortedSeats) {
+        const newRes = await reservationService.create({
+          passenger_id: currentUser.id,
+          trip_id: trip.id,
+          seat_number: seatNum,
+          price: unitPrice,
+          payment_method: paymentMethod,
+          passenger_name: passengerName,
+          passenger_email: passengerEmail,
+          passenger_phone: passengerPhone
+        });
 
-      publicarLog('info', `Reserva ${newReservation.reservation_code} confirmada para ${passengerName} (${passengerEmail})`);
+        createdReservations.push(newRes);
+
+        // 🟢 Publicar evento asíncrono a RabbitMQ por cada asiento reservado
+        publicarReservaCreada({
+          viajeId: trip.id,
+          asiento: seatNum,
+          pasajero: passengerName,
+          reservaCode: newRes.reservation_code
+        });
+
+        publicarLog('info', `Reserva ${newRes.reservation_code} (Asiento N° ${seatNum}) confirmada para ${passengerName}`);
+      }
+
+      const primaryRes = createdReservations[0];
+      // Adjuntar resumen de asientos múltiples y precio total para el comprobante
+      (primaryRes as any).combined_seats_str = seatsFormattedStr;
+      (primaryRes as any).total_price_calculated = totalPrice;
 
       showNotification(
         '¡Reserva Exitosa!',
-        `Tu boleto con código ${newReservation.reservation_code} ha sido confirmado satisfactoriamente.`,
+        `Se han confirmado ${selectedSeats.length} asiento(s) (${seatsFormattedStr}) satisfactoriamente.`,
         'success'
       );
 
-      onSuccess(newReservation);
+      onSuccess(primaryRes);
     } catch (error: any) {
       console.error('Error al procesar reserva:', error);
       showNotification('Error', 'No se pudo completar la reserva. Intenta nuevamente.', 'error');
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -115,15 +135,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <span className="value">{trip.bus} ({trip.bus_model})</span>
                 </div>
                 <div className="summary-item">
-                  <span className="label">Asiento Seleccionado:</span>
+                  <span className="label">Asiento(s) Seleccionado(s):</span>
                   <span className="value badge badge-success" style={{ fontSize: '0.9rem' }}>
-                    Asiento N° {selectedSeat < 10 ? `0${selectedSeat}` : selectedSeat}
+                    {seatsFormattedStr} ({selectedSeats.length})
                   </span>
                 </div>
                 <div className="summary-divider"></div>
                 <div className="summary-item total-row">
                   <span className="total-label">Total a Pagar:</span>
-                  <span className="total-price">$ {(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP</span>
+                  <span className="total-price">$ {totalPrice.toLocaleString('es-CL')} CLP</span>
                 </div>
               </div>
             </div>
@@ -210,7 +230,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               disabled={isProcessing}
               style={{ minWidth: '220px' }}
             >
-              {isProcessing ? '🔄 Procesando Pago...' : `Confirmar y Pagar $ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP`}
+              {isProcessing ? '🔄 Procesando Pago...' : `Confirmar y Pagar $ ${totalPrice.toLocaleString('es-CL')} CLP`}
             </button>
           </div>
         </form>

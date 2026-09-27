@@ -3,17 +3,20 @@ import type { Seat } from '../types';
 
 interface SeatSelectorProps {
   seats: Seat[];
-  selectedSeatNumber: number | null;
-  onSelectSeat: (seatNumber: number) => void;
+  selectedSeats: number[];
+  onToggleSeat: (seatNumber: number) => void;
   price: number;
 }
 
 export const SeatSelector: React.FC<SeatSelectorProps> = ({
   seats,
-  selectedSeatNumber,
-  onSelectSeat,
+  selectedSeats,
+  onToggleSeat,
   price
 }) => {
+  const unitPrice = price < 500 ? price * 300 : price;
+  const totalPrice = unitPrice * selectedSeats.length;
+
   // Organizar asientos en filas de 4 (2 izquierda, pasillo, 2 derecha)
   const rows: Seat[][] = [];
   const chunkSize = 4;
@@ -25,7 +28,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
     <div className="seat-selector-wrapper">
       <div className="seat-selector-header">
         <h3>💺 Distribución del Bus</h3>
-        <p>Selecciona tu asiento para continuar con la reserva</p>
+        <p>Puedes seleccionar <strong>uno o varios asientos</strong> para tu reserva</p>
       </div>
 
       {/* Leyenda de Asientos */}
@@ -36,7 +39,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
         </div>
         <div className="legend-item">
           <span className="legend-sample selected"></span>
-          <span>Seleccionado</span>
+          <span>Seleccionado ({selectedSeats.length})</span>
         </div>
         <div className="legend-item">
           <span className="legend-sample reserved"></span>
@@ -65,7 +68,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
               <div key={`row-${rowIndex}`} className="bus-row">
                 <div className="seat-pair">
                   {leftPair.map(seat => {
-                    const isSelected = selectedSeatNumber === seat.seat_number;
+                    const isSelected = selectedSeats.includes(seat.seat_number);
                     const isReserved = seat.status === 'reserved';
 
                     return (
@@ -74,8 +77,8 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
                         type="button"
                         disabled={isReserved}
                         className={`bus-seat ${isReserved ? 'seat-reserved' : isSelected ? 'seat-selected' : 'seat-available'}`}
-                        onClick={() => onSelectSeat(seat.seat_number)}
-                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - $ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP`}
+                        onClick={() => onToggleSeat(seat.seat_number)}
+                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - $ ${unitPrice.toLocaleString('es-CL')} CLP`}
                       >
                         <span className="seat-num">{seat.seat_number < 10 ? `0${seat.seat_number}` : seat.seat_number}</span>
                       </button>
@@ -89,7 +92,7 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
 
                 <div className="seat-pair">
                   {rightPair.map(seat => {
-                    const isSelected = selectedSeatNumber === seat.seat_number;
+                    const isSelected = selectedSeats.includes(seat.seat_number);
                     const isReserved = seat.status === 'reserved';
 
                     return (
@@ -98,8 +101,8 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
                         type="button"
                         disabled={isReserved}
                         className={`bus-seat ${isReserved ? 'seat-reserved' : isSelected ? 'seat-selected' : 'seat-available'}`}
-                        onClick={() => onSelectSeat(seat.seat_number)}
-                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - $ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP`}
+                        onClick={() => onToggleSeat(seat.seat_number)}
+                        title={isReserved ? `Asiento ${seat.seat_number} (Ocupado)` : `Asiento ${seat.seat_number} - $ ${unitPrice.toLocaleString('es-CL')} CLP`}
                       >
                         <span className="seat-num">{seat.seat_number < 10 ? `0${seat.seat_number}` : seat.seat_number}</span>
                       </button>
@@ -120,15 +123,19 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({
       {/* Resumen de Selección */}
       <div className="seat-selection-summary">
         <div>
-          <span className="summary-label">Asiento Elegido:</span>
+          <span className="summary-label">Asientos Elegidos ({selectedSeats.length}):</span>
           <span className="summary-value">
-            {selectedSeatNumber ? `N° ${selectedSeatNumber}` : 'Ninguno'}
+            {selectedSeats.length > 0 
+              ? selectedSeats.sort((a, b) => a - b).map(n => `N° ${n}`).join(', ') 
+              : 'Ninguno'}
           </span>
         </div>
         <div>
-          <span className="summary-label">Precio:</span>
+          <span className="summary-label">Precio Total:</span>
           <span className="summary-price">
-            {selectedSeatNumber ? `$ ${(price < 500 ? price * 300 : price).toLocaleString('es-CL')} CLP` : '$ 0 CLP'}
+            {selectedSeats.length > 0 
+              ? `$ ${totalPrice.toLocaleString('es-CL')} CLP` 
+              : '$ 0 CLP'}
           </span>
         </div>
       </div>
