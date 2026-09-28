@@ -27,6 +27,7 @@ public class RabbitMQConfig {
 
     // ── Nombres de colas ──────────────────────────────────────────────────────
     public static final String RESERVA_CREADA_Q   = "reserva_creada_queue";
+    public static final String SMART_EMAIL_Q      = "smart.reserva.email";
     public static final String RESERVA_CANCEL_Q   = "reserva_cancelada_queue";
     public static final String VIAJE_PROGRAMADO_Q = "viaje_programado_queue";
     public static final String LOGS_Q             = "logs_queue";
@@ -40,6 +41,7 @@ public class RabbitMQConfig {
 
     // ── Declaración de colas (durable = true) ─────────────────────────────────
     @Bean public Queue reservaCreadaQueue()   { return new Queue(RESERVA_CREADA_Q,   true); }
+    @Bean public Queue smartEmailQueue()      { return new Queue(SMART_EMAIL_Q,      true); }
     @Bean public Queue reservaCancelQueue()   { return new Queue(RESERVA_CANCEL_Q,   true); }
     @Bean public Queue viajeProgramadoQueue() { return new Queue(VIAJE_PROGRAMADO_Q, true); }
     @Bean public Queue logsQueue()            { return new Queue(LOGS_Q,             true); }
@@ -49,6 +51,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindReservaCreada(TopicExchange ex, Queue reservaCreadaQueue) {
         return BindingBuilder.bind(reservaCreadaQueue).to(ex).with("reserva.creada");
+    }
+
+    @Bean
+    public Binding bindSmartEmail(TopicExchange ex, Queue smartEmailQueue) {
+        return BindingBuilder.bind(smartEmailQueue).to(ex).with("reserva.creada");
     }
 
     @Bean

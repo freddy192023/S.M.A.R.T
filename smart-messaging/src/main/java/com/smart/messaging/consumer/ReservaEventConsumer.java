@@ -26,7 +26,7 @@ public class ReservaEventConsumer {
      * Consumidor 1: Envía email de confirmación al pasajero.
      * En producción: integrar SendGrid, Mailgun o JavaMailSender.
      */
-    @RabbitListener(queues = "reserva_creada_queue")
+    @RabbitListener(queues = {"reserva_creada_queue", "smart.reserva.email"})
     public void enviarEmailConfirmacion(String reservaJson) {
         System.out.println("[EMAIL] ✉  Enviando confirmación al pasajero...");
         System.out.println("[EMAIL]    Datos de reserva: " + reservaJson);
