@@ -1,21 +1,16 @@
 version: '3.8'
-services:
-  rabbitmq:
-    image: rabbitmq:4.2-management
-    container_name: smart-rabbitmq
-    ports:
-      - "5672:5672"     # AMQP — puerto del broker
-      - "15672:15672"   # UI Web Admin
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-volumes:
-  rabbitmq_data:
+services:
+  smart-messaging:
+    build: .
+    container_name: smart-messaging-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_RABBITMQ_HOST=shark.rmq.cloudamqp.com
+      - SPRING_RABBITMQ_PORT=5671
+      - SPRING_RABBITMQ_USERNAME=upzhvdpi
+      - SPRING_RABBITMQ_PASSWORD=uQeQBUACo1mXOIuYq2Rta87dczLjEkHa
+      - SPRING_RABBITMQ_VIRTUAL_HOST=upzhvdpi
+      - SPRING_RABBITMQ_SSL_ENABLED=true
+
