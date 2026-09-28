@@ -24,7 +24,7 @@ public class MessagingApplication {
                 ║   🔵 Síncrono   → Cola RPC activa                   ║
                 ║                                                      ║
                 ║   API REST   → http://localhost:8080                 ║
-                ║   RabbitMQ   → http://localhost:15672 (guest/guest)  ║
+                ║   RabbitMQ   → https://shark.rmq.cloudamqp.com       ║
                 ╚══════════════════════════════════════════════════════╝
                 """);
     }
