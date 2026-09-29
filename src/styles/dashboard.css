@@ -5,6 +5,10 @@
   min-height: 100vh;
 }
 
+.sidebar-backdrop {
+  display: none;
+}
+
 /* Sidebar Styling */
 .sidebar {
   width: var(--sidebar-width);
@@ -22,6 +26,10 @@
 
 .sidebar.sidebar-collapsed {
   width: var(--sidebar-collapsed-width);
+}
+
+.dashboard-wrapper.sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-collapsed-width);
 }
 
 .sidebar-header {

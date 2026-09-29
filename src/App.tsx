@@ -238,7 +238,11 @@ export const App: React.FC = () => {
       {!sidebarCollapsed && (
         <div 
           className="sidebar-backdrop"
-          onClick={() => setSidebarCollapsed(true)}
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+              setSidebarCollapsed(true);
+            }
+          }}
         />
       )}
       <Sidebar 
