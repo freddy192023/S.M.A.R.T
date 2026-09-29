@@ -24,7 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, cur
     { key: 'reports', label: 'Reportes', icon: '📊', roles: ['admin', 'operador'] },
     { key: 'users', label: 'Usuarios', icon: '👥', roles: ['admin'] },
     { key: 'roles', label: 'Roles y Permisos', icon: '🔐', roles: ['admin'] },
-    { key: 'how-it-works', label: 'Manual de Uso', icon: '📖', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
+    { key: 'events-promos', label: 'Eventos & Promos', icon: '🎉', roles: ['admin', 'operador', 'conductor', 'pasajero'] },
     { key: 'profile', label: 'Mi Perfil', icon: '👤', roles: ['admin', 'operador', 'conductor', 'pasajero'] }
   ];
 

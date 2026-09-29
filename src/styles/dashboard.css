@@ -675,19 +675,6 @@
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    width: var(--sidebar-collapsed-width);
-  }
-  .sidebar-header .brand-title, .sidebar-header .brand-subtitle, .sidebar-item span, .sidebar-footer {
-    display: none;
-  }
-  .main-content {
-    margin-left: var(--sidebar-collapsed-width);
-  }
-  .sidebar-item a {
-    justify-content: center;
-    padding: 1rem 0;
-  }
   .topbar {
     padding: 0 1rem;
   }

@@ -23,10 +23,11 @@ import { Reports } from './pages/modules/Reports';
 import { TripSearch } from './pages/modules/TripSearch';
 import { MyReservations } from './pages/modules/MyReservations';
 import { Reservations } from './pages/modules/Reservations';
+import { EventsPromos } from './pages/modules/EventsPromos';
 
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<string>('home');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const { user, profile, loading, signOut } = useAuth();
 
   // Sync state from hash
@@ -34,6 +35,9 @@ export const App: React.FC = () => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') || 'home';
       setActiveView(hash);
+      if (window.innerWidth <= 768) {
+        setSidebarCollapsed(true);
+      }
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -48,6 +52,9 @@ export const App: React.FC = () => {
   const changeView = (view: string) => {
     setActiveView(view);
     window.location.hash = `#${view}`;
+    if (window.innerWidth <= 768) {
+      setSidebarCollapsed(true);
+    }
   };
 
   const handleLogout = async () => {
@@ -84,6 +91,7 @@ export const App: React.FC = () => {
     stops: 'Gestión de Paraderos',
     trips: 'Programación de Viajes',
     reports: 'Reportes y Métricas',
+    'events-promos': '🎉 Eventos y Promociones Exclusivas',
     profile: 'Perfil de Usuario'
   };
 
@@ -101,6 +109,7 @@ export const App: React.FC = () => {
     stops: ['admin', 'operador', 'conductor'],
     trips: ['admin', 'operador', 'conductor'],
     reports: ['admin', 'operador'],
+    'events-promos': ['admin', 'operador', 'conductor', 'pasajero'],
     'how-it-works': ['admin', 'operador', 'conductor', 'pasajero'],
     profile: ['admin', 'operador', 'conductor', 'pasajero']
   };
@@ -140,8 +149,9 @@ export const App: React.FC = () => {
         return <Trips />;
       case 'reports':
         return <Reports />;
+      case 'events-promos':
       case 'how-it-works':
-        return <HowItWorks />;
+        return <EventsPromos setActiveView={changeView} />;
       case 'profile':
         if (profile) return <Profile currentUser={profile} />;
         return null;
