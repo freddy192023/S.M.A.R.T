@@ -498,6 +498,35 @@ El proyecto sigue una **Arquitectura de Monolito Modular en el Frontend** con **
 
 ---
 
+## 🐇 Módulo de Mensajería RabbitMQ (CloudAMQP)
+
+S.M.A.R.T. cuenta con una arquitectura de mensajería desacoplada utilizando **RabbitMQ (CloudAMQP)** y funciones Serverless en Vercel.
+
+> 📖 **Documentación extendida completa:** Consulta el archivo [RABBITMQ_DOCS.md](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/RABBITMQ_DOCS.md).
+
+### 🔑 Credenciales de Acceso a CloudAMQP (Management UI)
+
+| Parámetro | Valor |
+|---|---|
+| **Host / Server** | `shark.rmq.cloudamqp.com` |
+| **Virtual Host (vhost)** | `upzhvdpi` |
+| **Usuario (Username)** | `upzhvdpi` |
+| **Contraseña (Password)** | `uQeQBUACo1mXOIuYq2Rta87dczLjEkHa` |
+| **AMQPS URL** | `amqps://upzhvdpi:uQeQBUACo1mXOIuYq2Rta87dczLjEkHa@shark.rmq.cloudamqp.com/upzhvdpi` |
+
+### 📥 Colas Activas y Ruteo
+
+| Nombre de la Cola | Routing Key | Función |
+|---|---|---|
+| `reserva_creada_queue` | `reserva.creada` | Eventos de reservas confirmadas |
+| `reserva_cancelada_queue` | `reserva.cancelada` | Eventos de cancelación de reservas |
+| `viaje_programado_queue` | `viaje.programado` | Notificación de nuevos viajes programados |
+| `logs_queue` | `log.*` | Auditoría general (recibe copia de todos los eventos) |
+| `errors_only_queue` | `log.error` | Registro de errores críticos del sistema |
+| `smart.reserva.email` | `reserva.email` | Cola de correos de confirmación |
+
+---
+
 ## 💻 Stack Tecnológico
 
 ### Frontend
