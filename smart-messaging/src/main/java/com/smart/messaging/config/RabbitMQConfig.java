@@ -25,6 +25,9 @@ public class RabbitMQConfig {
     // ── Exchange ──────────────────────────────────────────────────────────────
     public static final String EXCHANGE = "s.m.a.r.t_exchange";
 
+    public static final String DLX = "smart_dlx";
+    public static final String DEAD_LETTER_Q = "smart_dlq";
+
     // ── Nombres de colas ──────────────────────────────────────────────────────
     public static final String RESERVA_CREADA_Q   = "reserva_creada_queue";
     public static final String SMART_EMAIL_Q      = "smart.reserva.email";
@@ -39,8 +42,32 @@ public class RabbitMQConfig {
         return new TopicExchange(EXCHANGE, true, false);
     }
 
+    // ── Dead Letter Exchange (DLX) y Dead Letter Queue (DLQ) ──────────────────
+    @Bean
+    public TopicExchange smartDeadLetterExchange() {
+        return new TopicExchange(DLX, true, false);
+    }
+
+    @Bean
+    public Queue deadLetterQueue() {
+        return new Queue(DEAD_LETTER_Q, true);
+    }
+
+    @Bean
+    public Binding bindDeadLetter(TopicExchange smartDeadLetterExchange, Queue deadLetterQueue) {
+        return BindingBuilder.bind(deadLetterQueue).to(smartDeadLetterExchange).with("dead.letter");
+    }
+
     // ── Declaración de colas (durable = true) ─────────────────────────────────
-    @Bean public Queue reservaCreadaQueue()   { return new Queue(RESERVA_CREADA_Q,   true); }
+    // Esta cola tiene configurado el DLX para que los mensajes fallidos vayan a smart_dlq
+    @Bean 
+    public Queue reservaCreadaQueue() { 
+        return QueueBuilder.durable(RESERVA_CREADA_Q)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", "dead.letter")
+                .build();
+    }
+    
     @Bean public Queue smartEmailQueue()      { return new Queue(SMART_EMAIL_Q,      true); }
     @Bean public Queue reservaCancelQueue()   { return new Queue(RESERVA_CANCEL_Q,   true); }
     @Bean public Queue viajeProgramadoQueue() { return new Queue(VIAJE_PROGRAMADO_Q, true); }

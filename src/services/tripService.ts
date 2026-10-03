@@ -66,7 +66,7 @@ export const tripService = {
       routes = (rData || []).filter((r: any) => r.status !== 'inactiva');
       buses = (bData || []).filter((b: any) => b.status === 'disponible' || b.status === 'Activo' || b.status === 'activo');
       drivers = (dData || []).filter((d: any) => d.status === 'activo' || d.status === 'Activo' || d.status === 'en_viaje');
-      allReservations = resData.data || [];
+      allReservations = Array.isArray(resData.data) ? resData.data : (resData.data ? [resData.data] : []);
     } catch (e) {
       console.warn('Error obteniendo datos complementarios:', e);
     }

@@ -27,40 +27,51 @@ public class ReservaEventConsumer {
      * En producción: integrar SendGrid, Mailgun o JavaMailSender.
      */
     @RabbitListener(queues = {"reserva_creada_queue", "smart.reserva.email"})
-    public void enviarEmailConfirmacion(String reservaJson) {
-        System.out.println("[EMAIL] ✉  Enviando confirmación al pasajero...");
-        System.out.println("[EMAIL]    Datos de reserva: " + reservaJson);
-        // TODO: emailService.send(reserva.getPassengerEmail(), "Reserva confirmada", template);
+    public void enviarEmailConfirmacion(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String reservaJson = new String(message.getBody());
+        try {
+            System.out.println("[EMAIL] ✉  Enviando confirmación al pasajero...");
+            System.out.println("[EMAIL]    Datos de reserva: " + reservaJson);
+            // TODO: emailService.send(...)
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false); // false requeue manda al DLX
+        }
     }
 
-    /**
-     * Consumidor 2: Genera el comprobante PDF de la reserva.
-     * En producción: integrar iText 7, JasperReports o Apache PDFBox.
-     */
     @RabbitListener(queues = "reserva_creada_queue")
-    public void generarComprobantePDF(String reservaJson) {
-        System.out.println("[PDF] 📄 Generando comprobante de reserva...");
-        System.out.println("[PDF]    Datos de reserva: " + reservaJson);
-        // TODO: pdfService.generate(reservaCode, passengerName, seatNumber, tripDetails);
+    public void generarComprobantePDF(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String reservaJson = new String(message.getBody());
+        try {
+            System.out.println("[PDF] 📄 Generando comprobante de reserva...");
+            System.out.println("[PDF]    Datos de reserva: " + reservaJson);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        }
     }
 
-    /**
-     * Consumidor 3: Registra la reserva en la bitácora de auditoría.
-     */
     @RabbitListener(queues = "reserva_creada_queue")
-    public void registrarAuditoria(String reservaJson) {
-        System.out.println("[AUDITORIA] 📝 Registrando reserva en bitácora...");
-        System.out.println("[AUDITORIA]    " + reservaJson);
-        // TODO: auditService.log("RESERVA_CREADA", reservaJson, LocalDateTime.now());
+    public void registrarAuditoria(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String reservaJson = new String(message.getBody());
+        try {
+            System.out.println("[AUDITORIA] 📝 Registrando reserva en bitácora...");
+            System.out.println("[AUDITORIA]    " + reservaJson);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        }
     }
 
-    /**
-     * Consumidor de cancelación: Libera el asiento cuando se cancela una reserva.
-     */
     @RabbitListener(queues = "reserva_cancelada_queue")
-    public void liberarAsiento(String reservaJson) {
-        System.out.println("[ASIENTO] 🔓 Liberando asiento de reserva cancelada...");
-        System.out.println("[ASIENTO]    " + reservaJson);
-        // TODO: seatService.markAsAvailable(viajeId, seatNumber);
+    public void liberarAsiento(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String reservaJson = new String(message.getBody());
+        try {
+            System.out.println("[ASIENTO] 🔓 Liberando asiento de reserva cancelada...");
+            System.out.println("[ASIENTO]    " + reservaJson);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        }
     }
 }

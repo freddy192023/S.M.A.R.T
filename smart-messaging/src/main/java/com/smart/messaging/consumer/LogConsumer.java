@@ -26,22 +26,27 @@ public class LogConsumer {
      * Routing key "log.*" captura cualquier nivel.
      */
     @RabbitListener(queues = "logs_queue")
-    public void monitorGeneral(String mensaje) {
-        System.out.println("[MONITOR] 📊 " + mensaje);
+    public void monitorGeneral(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String mensaje = new String(message.getBody());
+        try {
+            System.out.println("[MONITOR] \uD83D\uDCCA " + mensaje);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        }
     }
 
-    /**
-     * Alerta crítica: recibe SOLO los errores.
-     * Activa protocolo de urgencia: SMS, Slack, PagerDuty, etc.
-     * Routing key "log.error" → errors_only_queue (binding exclusivo).
-     */
     @RabbitListener(queues = "errors_only_queue")
-    public void alertaCritica(String mensaje) {
-        System.out.println("╔════════════════════════════════════════╗");
-        System.out.println("║  🚨 [ALERTA CRÍTICA S.M.A.R.T]        ║");
-        System.out.println("║  " + mensaje);
-        System.out.println("╚════════════════════════════════════════╝");
-        // TODO: smsService.send(adminPhone, "ALERTA: " + mensaje);
-        // TODO: slackWebhook.notify("#alertas", mensaje);
+    public void alertaCritica(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String mensaje = new String(message.getBody());
+        try {
+            System.out.println("╔════════════════════════════════════════╗");
+            System.out.println("║  \uD83D\uDEA8 [ALERTA CRÍTICA S.M.A.R.T]        ║");
+            System.out.println("║  " + mensaje);
+            System.out.println("╚════════════════════════════════════════╝");
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        }
     }
 }

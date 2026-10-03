@@ -18,10 +18,14 @@ import org.springframework.stereotype.Service;
 public class ViajeEventConsumer {
 
     @RabbitListener(queues = "viaje_programado_queue")
-    public void notificarConductor(String viajeJson) {
-        System.out.println("[CONDUCTOR] 🚍 Nuevo viaje programado:");
-        System.out.println("[CONDUCTOR]    " + viajeJson);
-        // TODO: pushNotificationService.send(driver.getDeviceToken(), "Nuevo viaje asignado");
-        // TODO: emailService.send(driver.getEmail(), "Tienes un nuevo viaje", viajeDetails);
+    public void notificarConductor(org.springframework.amqp.core.Message message, com.rabbitmq.client.Channel channel) throws java.io.IOException {
+        String viajeJson = new String(message.getBody());
+        try {
+            System.out.println("[CONDUCTOR] \uD83D\uDE8D Nuevo viaje programado:");
+            System.out.println("[CONDUCTOR]    " + viajeJson);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        }
     }
 }

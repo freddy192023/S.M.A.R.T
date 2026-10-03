@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.M.A.R.T. Load Tester</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #1c1c1c; color: #fff; margin: 0; padding: 0; font-size: 14px; }
+        /* HEADER */
+        .top-bar { background-color: #2b2b2b; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid #444; }
+        .logo-section { display: flex; align-items: center; gap: 15px; }
+        .logo { font-size: 24px; font-weight: bold; color: #9bcd42; font-style: italic; letter-spacing: 1px; display: flex; align-items: center; gap: 5px; }
+        .logo-icon { width: 30px; height: 30px; background-color: #9bcd42; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+        .header-stats { display: flex; gap: 30px; }
+        .header-stat { display: flex; flex-direction: column; align-items: flex-start; }
+        .header-label { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; }
+        .header-value { font-size: 14px; color: #fff; }
+        .status-running { color: #9bcd42; font-weight: bold; }
+        .controls { display: flex; gap: 10px; }
+        .btn { border: none; padding: 8px 15px; font-size: 12px; font-weight: bold; border-radius: 3px; cursor: pointer; text-transform: uppercase; }
+        .btn-edit { background-color: #5bc0de; color: white; }
+        .btn-stop { background-color: #d9534f; color: white; }
+        .btn-reset { background-color: #f0ad4e; color: white; }
+        
+        /* TABS */
+        .tabs { background-color: #1c1c1c; padding: 10px 20px 0; border-bottom: 1px solid #333; display: flex; gap: 20px; }
+        .tab { color: #aaa; padding: 10px 0; cursor: pointer; text-transform: uppercase; font-size: 12px; font-weight: bold; border-bottom: 3px solid transparent; }
+        .tab.active { color: #9bcd42; border-bottom: 3px solid #9bcd42; }
+
+        /* CONTENT */
+        .content { padding: 20px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { color: #aaa; padding: 10px; border-bottom: 1px solid #444; font-weight: normal; }
+        td { padding: 10px; border-bottom: 1px solid #333; }
+        tr:hover { background-color: #2a2a2a; }
+        .numeric { text-align: right; }
+        
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: #2b2b2b; padding: 25px; border-radius: 5px; width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border-top: 5px solid #9bcd42; }
+        .modal h2 { margin-top: 0; font-size: 20px; font-weight: 400; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: #ccc; font-size: 13px; }
+        .input-group input { width: 100%; padding: 8px; background: #1c1c1c; border: 1px solid #444; color: white; border-radius: 3px; box-sizing: border-box; }
+        .btn-start { background-color: #9bcd42; color: #1c1c1c; border: none; padding: 10px 20px; width: 100%; font-size: 14px; font-weight: bold; border-radius: 3px; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- INITIAL SETUP MODAL -->
+<div id="setupModal" class="modal-overlay">
+    <div class="modal">
+        <h2>Start new load test</h2>
+        <div class="input-group">
+            <label>Number of users (peak concurrency)</label>
+            <input type="number" id="inputUsers" value="100">
+        </div>
+        <div class="input-group">
+            <label>Spawn rate (users started/second)</label>
+            <input type="number" id="inputRate" value="10">
+        </div>
+        <div class="input-group">
+            <label>Host (base URL)</label>
+            <input type="text" id="inputHost" value="https://s-m-a-r-t-six.vercel.app">
+        </div>
+        <p style="color:#aaa;font-size:12px;margin-top:10px;">Se probarán automáticamente: /api/confirmar, /api/cancelar, /api/viaje, /api/log-error</p>
+        <button class="btn-start" onclick="startSwarm()">Start swarming</button>
+    </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo"><div class="logo-icon"></div> LOCUST</div>
+        <div class="header-stats">
+            <div class="header-stat"><span class="header-label">HOST</span><span class="header-value" id="dispHost">http://localhost</span></div>
+            <div class="header-stat"><span class="header-label">STATUS</span><span class="header-value status-running" id="dispStatus">STOPPED</span></div>
+            <div class="header-stat"><span class="header-label">USERS</span><span class="header-value" id="dispUsers">0</span></div>
+            <div class="header-stat"><span class="header-label">RPS</span><span class="header-value" id="dispRps">0</span></div>
+            <div class="header-stat"><span class="header-label">FAILURES</span><span class="header-value" id="dispFails">0%</span></div>
+        </div>
+    </div>
+    <div class="controls">
+        <button class="btn btn-edit" onclick="editSetup()">EDIT</button>
+        <button class="btn btn-stop" onclick="stopSwarm()">STOP</button>
+        <button class="btn btn-reset" onclick="resetStats()">RESET</button>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+    <div class="tab active">STATISTICS</div>
+    <div class="tab">CHARTS</div>
+    <div class="tab">FAILURES</div>
+    <div class="tab">EXCEPTIONS</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Name</th>
+                <th class="numeric"># Requests</th>
+                <th class="numeric"># Fails</th>
+                <th class="numeric">Median (ms)</th>
+                <th class="numeric">Average (ms)</th>
+                <th class="numeric">Min (ms)</th>
+                <th class="numeric">Max (ms)</th>
+                <th class="numeric">Current RPS</th>
+                <th class="numeric">Current Failures/s</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>/api/confirmar</td>
+                <td class="numeric" id="r1_reqs">0</td>
+                <td class="numeric" id="r1_fails">0</td>
+                <td class="numeric" id="r1_med">0</td>
+                <td class="numeric" id="r1_avg">0</td>
+                <td class="numeric" id="r1_min">0</td>
+                <td class="numeric" id="r1_max">0</td>
+                <td class="numeric" id="r1_rps">0.0</td>
+                <td class="numeric" id="r1_fps">0.0</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/cancelar</td>
+                <td class="numeric" id="r2_reqs">0</td>
+                <td class="numeric" id="r2_fails">0</td>
+                <td class="numeric" id="r2_med">0</td>
+                <td class="numeric" id="r2_avg">0</td>
+                <td class="numeric" id="r2_min">0</td>
+                <td class="numeric" id="r2_max">0</td>
+                <td class="numeric" id="r2_rps">0.0</td>
+                <td class="numeric" id="r2_fps">0.0</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/viaje</td>
+                <td class="numeric" id="r3_reqs">0</td>
+                <td class="numeric" id="r3_fails">0</td>
+                <td class="numeric" id="r3_med">0</td>
+                <td class="numeric" id="r3_avg">0</td>
+                <td class="numeric" id="r3_min">0</td>
+                <td class="numeric" id="r3_max">0</td>
+                <td class="numeric" id="r3_rps">0.0</td>
+                <td class="numeric" id="r3_fps">0.0</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/log-error</td>
+                <td class="numeric" id="r4_reqs">0</td>
+                <td class="numeric" id="r4_fails">0</td>
+                <td class="numeric" id="r4_med">0</td>
+                <td class="numeric" id="r4_avg">0</td>
+                <td class="numeric" id="r4_min">0</td>
+                <td class="numeric" id="r4_max">0</td>
+                <td class="numeric" id="r4_rps">0.0</td>
+                <td class="numeric" id="r4_fps">0.0</td>
+            </tr>
+            <tr style="font-weight:bold; border-top:2px solid #9bcd42;">
+                <td></td>
+                <td>Aggregated</td>
+                <td class="numeric" id="tReqs">0</td>
+                <td class="numeric" id="tFails">0</td>
+                <td class="numeric" id="tMed">0</td>
+                <td class="numeric" id="tAvg">0</td>
+                <td class="numeric" id="tMin">0</td>
+                <td class="numeric" id="tMax">0</td>
+                <td class="numeric" id="tRps">0.0</td>
+                <td class="numeric" id="tFps">0.0</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    let isRunning = false;
+    let targetUsers = 0;
+    let currentUsers = 0;
+    let spawnRate = 0;
+    let baseUrl = "";
+
+    // Endpoints a probar (cada uno activa colas distintas en RabbitMQ)
+    const ENDPOINTS = [
+        { path: '/api/confirmar',  payload: () => ({ viajeId: `trip-${rnd(100,999)}`, asiento: rnd(1,40), pasajero: `User-${rnd(1000,9999)}` }), id: 'r1' },
+        { path: '/api/cancelar',   payload: () => ({ viajeId: `trip-${rnd(100,999)}`, asiento: rnd(1,40), pasajero: `User-${rnd(1000,9999)}`, reservaCode: `SMART-${rnd(100000,999999)}` }), id: 'r2' },
+        { path: '/api/viaje',      payload: () => ({ viajeId: `VJ-${rnd(1000,9999)}`, ruta: 'Santiago - Valparaíso', conductor: `Conductor-${rnd(1,50)}`, fecha: new Date().toISOString() }), id: 'r3' },
+        { path: '/api/log-error',  payload: () => ({ mensaje: `Error simulado #${rnd(1,9999)}` }), id: 'r4' }
+    ];
+
+    function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    // Stats per endpoint
+    let stats = {};
+    let globalTimes = [];
+    let simInterval, rpsInterval, spawnInterval;
+
+    function initStats() {
+        stats = {};
+        globalTimes = [];
+        ENDPOINTS.forEach(ep => {
+            stats[ep.id] = { reqs: 0, fails: 0, times: [], lastReqs: 0, lastFails: 0 };
+        });
+    }
+
+    function editSetup() {
+        document.getElementById('setupModal').classList.remove('hidden');
+    }
+
+    function stopSwarm() {
+        isRunning = false;
+        clearInterval(simInterval);
+        clearInterval(spawnInterval);
+        clearInterval(rpsInterval);
+        document.getElementById('dispStatus').innerText = "STOPPED";
+        document.getElementById('dispStatus').style.color = "#d9534f";
+    }
+
+    function resetStats() {
+        currentUsers = 0;
+        initStats();
+        updateUI();
+    }
+
+    function startSwarm() {
+        targetUsers = parseInt(document.getElementById('inputUsers').value);
+        spawnRate = parseInt(document.getElementById('inputRate').value);
+        baseUrl = document.getElementById('inputHost').value.replace(/\/$/, '');
+        
+        document.getElementById('dispHost').innerText = baseUrl;
+        document.getElementById('setupModal').classList.add('hidden');
+        
+        resetStats();
+        isRunning = true;
+        document.getElementById('dispStatus').innerText = "RUNNING";
+        document.getElementById('dispStatus').style.color = "#9bcd42";
+
+        spawnInterval = setInterval(() => {
+            if (currentUsers < targetUsers) {
+                currentUsers += spawnRate;
+                if (currentUsers > targetUsers) currentUsers = targetUsers;
+                document.getElementById('dispUsers').innerText = currentUsers;
+            } else {
+                clearInterval(spawnInterval);
+            }
+        }, 1000);
+
+        simInterval = setInterval(async () => {
+            if(!isRunning || currentUsers === 0) return;
+            let batch = Math.min(currentUsers, 20);
+            let promises = [];
+            for(let i=0; i<batch; i++) {
+                // Elegir endpoint aleatorio para distribuir tráfico a todas las colas
+                const ep = ENDPOINTS[Math.floor(Math.random() * ENDPOINTS.length)];
+                promises.push(makeRequest(ep));
+            }
+            await Promise.all(promises);
+        }, 1000);
+
+        rpsInterval = setInterval(() => {
+            ENDPOINTS.forEach(ep => {
+                let s = stats[ep.id];
+                s.rps = s.reqs - s.lastReqs;
+                s.fps = s.fails - s.lastFails;
+                s.lastReqs = s.reqs;
+                s.lastFails = s.fails;
+            });
+            updateUI();
+        }, 1000);
+    }
+
+    async function makeRequest(ep) {
+        const start = performance.now();
+        try {
+            const res = await fetch(baseUrl + ep.path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ep.payload())
+            });
+            const duration = performance.now() - start;
+            stats[ep.id].times.push(duration);
+            globalTimes.push(duration);
+            stats[ep.id].reqs++;
+            if (!res.ok) stats[ep.id].fails++;
+        } catch (e) {
+            stats[ep.id].fails++;
+        }
+    }
+
+    function calcTimings(arr) {
+        if (arr.length === 0) return { avg: 0, min: 0, max: 0, med: 0 };
+        let sorted = [...arr].sort((a,b) => a-b);
+        let sum = sorted.reduce((a,b) => a+b, 0);
+        return {
+            avg: (sum/sorted.length).toFixed(0),
+            min: sorted[0].toFixed(0),
+            max: sorted[sorted.length-1].toFixed(0),
+            med: sorted[Math.floor(sorted.length/2)].toFixed(0)
+        };
+    }
+
+    function updateUI() {
+        let totalReqs = 0, totalFails = 0, totalRps = 0, totalFps = 0;
+
+        ENDPOINTS.forEach(ep => {
+            let s = stats[ep.id];
+            let t = calcTimings(s.times);
+            document.getElementById(ep.id+'_reqs').innerText = s.reqs;
+            document.getElementById(ep.id+'_fails').innerText = s.fails;
+            document.getElementById(ep.id+'_avg').innerText = t.avg;
+            document.getElementById(ep.id+'_min').innerText = t.min;
+            document.getElementById(ep.id+'_max').innerText = t.max;
+            document.getElementById(ep.id+'_med').innerText = t.med;
+            document.getElementById(ep.id+'_rps').innerText = (s.rps || 0).toFixed(1);
+            document.getElementById(ep.id+'_fps').innerText = (s.fps || 0).toFixed(1);
+            totalReqs += s.reqs;
+            totalFails += s.fails;
+            totalRps += (s.rps || 0);
+            totalFps += (s.fps || 0);
+        });
+
+        let gt = calcTimings(globalTimes);
+        document.getElementById('tReqs').innerText = totalReqs;
+        document.getElementById('tFails').innerText = totalFails;
+        document.getElementById('tAvg').innerText = gt.avg;
+        document.getElementById('tMin').innerText = gt.min;
+        document.getElementById('tMax').innerText = gt.max;
+        document.getElementById('tMed').innerText = gt.med;
+        document.getElementById('tRps').innerText = totalRps.toFixed(1);
+        document.getElementById('tFps').innerText = totalFps.toFixed(1);
+        document.getElementById('dispRps').innerText = totalRps.toFixed(1);
+        let failPct = totalReqs > 0 ? ((totalFails / totalReqs) * 100).toFixed(0) : 0;
+        document.getElementById('dispFails').innerText = `${failPct}%`;
+    }
+
+    initStats();
+</script>
+</body>
+</html>

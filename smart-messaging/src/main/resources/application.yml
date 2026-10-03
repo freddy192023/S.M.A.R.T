@@ -22,7 +22,7 @@ spring:
     # Configuración del listener (consumidores)
     listener:
       simple:
-        acknowledge-mode: auto   # auto-ack para simplificar el demo
+        acknowledge-mode: manual   # manual-ack para mayor control y DLX
         prefetch: 1              # 1 mensaje a la vez por consumidor
 
 server:

@@ -7,7 +7,7 @@ const CLOUDAMQP_PASS = 'uQeQBUACo1mXOIuYq2Rta87dczLjEkHa';
 const AUTH_HEADER = 'Basic ' + Buffer.from(`${CLOUDAMQP_USER}:${CLOUDAMQP_PASS}`).toString('base64');
 
 export async function publishToCloudAMQP(routingKey, payload) {
-  const exchange = 'smart.events';
+  const exchange = 's.m.a.r.t_exchange';
   const publishUrl = `https://${CLOUDAMQP_HOST}/api/exchanges/${encodeURIComponent(CLOUDAMQP_VHOST)}/${encodeURIComponent(exchange)}/publish`;
 
   const body = {
