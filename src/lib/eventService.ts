@@ -77,8 +77,8 @@ export async function publicarReservaCreada(reserva: ReservaPayload): Promise<vo
  * // Llamar al cancelar en reservationService.cancel():
  * publicarReservaCancelada({ viajeId, asiento: seatNumber, reservaCode });
  */
-export async function publicarReservaCancelada(reserva: Omit<ReservaPayload, 'pasajero'>): Promise<void> {
-  const res = await post('/events/cancelacion', reserva);
+export async function publicarReservaCancelada(reserva: ReservaPayload): Promise<void> {
+  const res = await post('/cancelar', reserva);
   if (res?.ok) {
     console.log('[EventService] ✅ Evento reserva.cancelada publicado');
   }

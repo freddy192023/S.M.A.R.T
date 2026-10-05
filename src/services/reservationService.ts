@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import type { Reservation } from '../types';
 import { tripService } from './tripService';
+import { publicarReservaCancelada } from '../lib/eventService';
 
 const LOCAL_STORAGE_KEY = 'smart_reservations_data';
 
@@ -236,6 +237,11 @@ export const reservationService = {
   // Cancelar una reserva
   cancel: async (reservationId: string): Promise<boolean> => {
     reservationService.clearCache();
+
+    // Buscar reserva local o por ID para obtener datos para RabbitMQ
+    const local = getLocalReservations();
+    const target = local.find(r => r.id === reservationId);
+
     try {
       await supabase
         .from('reservations')
@@ -245,10 +251,21 @@ export const reservationService = {
       console.warn('Error cancelando en Supabase:', e);
     }
 
-    // Actualizar local
-    const local = getLocalReservations();
+    // Actualizar almacenamiento local
     const updated = local.map(r => r.id === reservationId ? { ...r, status: 'cancelled' as const } : r);
     saveLocalReservations(updated);
+
+    // Publicar evento en RabbitMQ vía Vercel (/api/cancelar)
+    try {
+      await publicarReservaCancelada({
+        viajeId: target?.trip_id || 'VJ-UNKNOWN',
+        asiento: target?.seat_number || 1,
+        pasajero: target?.passenger_name || 'Pasajero',
+        reservaCode: target?.reservation_code || 'SMART-000000'
+      });
+    } catch (err) {
+      console.warn('Error publicando cancelación a RabbitMQ:', err);
+    }
 
     return true;
   }
