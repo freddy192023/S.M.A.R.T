@@ -1,9 +1,9 @@
 {
   "rewrites": [
     { "source": "/api/events/reserva", "destination": "/api/reserva" },
-    { "source": "/api/events/cancelacion", "destination": "/api/reserva" },
-    { "source": "/api/events/viaje", "destination": "/api/reserva" },
-    { "source": "/api/events/log", "destination": "/api/reserva" },
+    { "source": "/api/events/cancelacion", "destination": "/api/cancelar" },
+    { "source": "/api/events/viaje", "destination": "/api/viaje" },
+    { "source": "/api/events/log", "destination": "/api/log-error" },
     { "source": "/api/reservations/confirmar", "destination": "/api/confirmar" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { publicarLog } from '../lib/eventService';
 
 export const driverService = {
   getAll: async () => {
@@ -20,6 +21,7 @@ export const driverService = {
   },
 
   create: async (driverData: any) => {
+    let driver: any;
     try {
       const { data, error } = await supabase
         .from('drivers')
@@ -28,12 +30,22 @@ export const driverService = {
         .single();
       if (error) {
         console.warn('Error insertando driver en DB, usando fallback local:', error);
-        return { id: `gen-driver-${Date.now()}`, ...driverData };
+        driver = { id: `gen-driver-${Date.now()}`, ...driverData };
+      } else {
+        driver = data;
       }
-      return data;
     } catch (e) {
-      return { id: `gen-driver-${Date.now()}`, ...driverData };
+      driver = { id: `gen-driver-${Date.now()}`, ...driverData };
     }
+
+    // Publicar log de auditoría a RabbitMQ (logs_queue)
+    try {
+      await publicarLog('info', `Nuevo conductor registrado: ${driverData.full_name || driverData.name || 'Conductor'}, Licencia: ${driverData.license_number || 'N/A'}`);
+    } catch (err) {
+      console.warn('Error enviando log de conductor a RabbitMQ:', err);
+    }
+
+    return driver;
   },
 
   update: async (id: string, driverData: any) => {
