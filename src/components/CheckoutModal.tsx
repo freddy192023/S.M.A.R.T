@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Trip, User, Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
 import { useNotification } from '../context/NotificationContext';
-import { publicarReservaCreada, publicarLog } from '../lib/eventService';
+import { publicarReservaCreada, publicarLog, confirmarReservaConRPC } from '../lib/eventService';
 
 interface CheckoutModalProps {
   trip: Trip;
@@ -53,6 +53,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const createdReservations: Reservation[] = [];
 
       for (const seatNum of sortedSeats) {
+        // 🔵 RPC Síncrono: Ejecutar verificación síncrona en RabbitMQ (seat_check_rpc_queue)
+        try {
+          await confirmarReservaConRPC({
+            viajeId: trip.id,
+            asiento: String(seatNum),
+            pasajero: passengerName
+          });
+        } catch (rpcErr) {
+          console.warn('Advertencia ejecutando RPC seat_check:', rpcErr);
+        }
+
         const newRes = await reservationService.create({
           passenger_id: currentUser.id,
           trip_id: trip.id,
