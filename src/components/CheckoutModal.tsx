@@ -91,7 +91,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       onSuccess(primaryRes);
     } catch (error: any) {
       console.error('Error al procesar reserva:', error);
-      showNotification('Error', 'No se pudo completar la reserva. Intenta nuevamente.', 'error');
+      showNotification('Conflicto de Reserva', error?.message || 'No se pudo completar la reserva. Intenta nuevamente.', 'error');
     } finally {
       setIsProcessing(false);
     }

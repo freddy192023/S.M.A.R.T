@@ -141,6 +141,36 @@ export const reservationService = {
     const code = generateReservationCode();
     let finalTripId = reservationData.trip_id;
 
+    // 0. Validar si el asiento ya fue reservado por otra persona justo antes de confirmar
+    try {
+      const { data: existingReservations } = await supabase
+        .from('reservations')
+        .select('id, seat_number, status, passenger_id, trip_id')
+        .eq('seat_number', reservationData.seat_number)
+        .eq('status', 'confirmed');
+
+      const isTakenInDb = existingReservations?.some((r: any) => 
+        (r.trip_id === finalTripId || r.trip_id === reservationData.trip_id) &&
+        r.passenger_id !== reservationData.passenger_id
+      );
+
+      const local = getLocalReservations();
+      const isTakenInLocal = local.some((r: any) => 
+        (r.trip_id === finalTripId || r.trip_id === reservationData.trip_id) && 
+        r.seat_number === reservationData.seat_number && 
+        r.status === 'confirmed' &&
+        r.passenger_id !== reservationData.passenger_id
+      );
+
+      if (isTakenInDb || isTakenInLocal) {
+        throw new Error(`❌ El asiento N° ${reservationData.seat_number} acaba de ser reservado por otro usuario que presionó primero. Por favor selecciona otro asiento.`);
+      }
+    } catch (checkErr: any) {
+      if (checkErr.message?.includes('acaba de ser reservado')) {
+        throw checkErr;
+      }
+    }
+
     // Si el viaje es virtual, asegurar que exista un registro real en Supabase con UUID válido
     if (finalTripId.startsWith('gen-trip-')) {
       try {
