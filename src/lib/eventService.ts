@@ -113,7 +113,7 @@ export async function publicarLog(
   nivel: 'info' | 'warning' | 'error',
   mensaje: string
 ): Promise<void> {
-  await post('/events/log', { nivel, mensaje });
+  await post('/log-error', { nivel, mensaje });
 }
 
 // ─── 🔵+🟢 FLUJO COMBINADO ───────────────────────────────────────────────────

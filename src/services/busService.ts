@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { publicarLog } from '../lib/eventService';
 
 export const busService = {
   getAll: async () => {
@@ -21,6 +22,7 @@ export const busService = {
   },
 
   create: async (busData: any) => {
+    let bus: any;
     try {
       const { data, error } = await supabase
         .from('buses')
@@ -29,12 +31,22 @@ export const busService = {
         .single();
       if (error) {
         console.warn('Error insertando bus en DB, usando fallback local:', error);
-        return { id: `gen-bus-${Date.now()}`, ...busData };
+        bus = { id: `gen-bus-${Date.now()}`, ...busData };
+      } else {
+        bus = data;
       }
-      return data;
     } catch (e) {
-      return { id: `gen-bus-${Date.now()}`, ...busData };
+      bus = { id: `gen-bus-${Date.now()}`, ...busData };
     }
+
+    // Publicar evento de auditoría a RabbitMQ (logs_queue)
+    try {
+      await publicarLog('info', `Nuevo bus registrado en flota: Patente ${busData.plate || busData.patente || 'N/A'}, Modelo ${busData.model || 'Sprinter'}`);
+    } catch (err) {
+      console.warn('Error publicando log de bus a RabbitMQ:', err);
+    }
+
+    return bus;
   },
 
   update: async (id: string, busData: any) => {
