@@ -20,7 +20,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Campos requeridos: viajeId, asiento, pasajero' });
     }
 
-    // 1. RPC Síncrono: Verificación de asiento
+    // 1. RPC Síncrono: Publicar verificación a seat_check_rpc_queue
+    await publishToCloudAMQP('seat.check', {
+      viajeId,
+      asiento: String(asiento),
+      pasajero,
+      accion: 'RPC_VERIFICAR_ASIENTO'
+    });
+
     const isOccupied = String(asiento) === '9999';
     if (isOccupied) {
       return res.status(400).json({ mensaje: `❌ Asiento ${asiento} ya está ocupado` });
