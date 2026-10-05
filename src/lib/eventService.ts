@@ -92,7 +92,7 @@ export async function publicarReservaCancelada(reserva: ReservaPayload): Promise
  * publicarViajeProgramado({ viajeId, ruta: 'Santiago → Valparaíso', conductorId, salida });
  */
 export async function publicarViajeProgramado(viaje: Record<string, string>): Promise<void> {
-  const res = await post('/events/viaje', viaje);
+  const res = await post('/viaje', viaje);
   if (res?.ok) {
     console.log('[EventService] ✅ Evento viaje.programado publicado');
   }

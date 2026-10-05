@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabaseClient';
 import { routeService } from './routeService';
 import { busService } from './busService';
 import { driverService } from './driverService';
+import { publicarViajeProgramado } from '../lib/eventService';
 
 let tripsCache: { data: any[]; timestamp: number } | null = null;
 const CACHE_TTL_MS = 15000; // 15 segundos de caché
@@ -237,6 +238,7 @@ export const tripService = {
       status: dbStatus
     };
 
+    let createdTrip: any = null;
     try {
       const { data, error } = await supabase
         .from('trips')
@@ -246,19 +248,34 @@ export const tripService = {
 
       if (error) {
         console.warn('Supabase error insertando trip, usando fallback local:', error);
-        return {
+        createdTrip = {
           id: `gen-trip-${Date.now()}`,
           ...payload
         };
+      } else {
+        createdTrip = data;
       }
-      return data;
     } catch (err) {
       console.warn('Excepción al crear trip en Supabase, usando fallback local:', err);
-      return {
+      createdTrip = {
         id: `gen-trip-${Date.now()}`,
         ...payload
       };
     }
+
+    // Publicar evento en RabbitMQ vía Vercel (/api/viaje)
+    try {
+      await publicarViajeProgramado({
+        viajeId: createdTrip?.id || `VJ-${Date.now()}`,
+        ruta: tripData.route || tripData.routeName || 'Ruta General',
+        conductor: tripData.conductor || tripData.driverName || 'Conductor Asignado',
+        fecha: isoDeparture
+      });
+    } catch (err) {
+      console.warn('Error publicando viaje a RabbitMQ:', err);
+    }
+
+    return createdTrip;
   },
 
   updateStatus: async (id: string, status: string) => {
