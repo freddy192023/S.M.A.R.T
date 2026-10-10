@@ -23,7 +23,13 @@ spring:
     listener:
       simple:
         acknowledge-mode: manual   # manual-ack para mayor control y DLX
-        prefetch: 1              # 1 mensaje a la vez por consumidor
+        prefetch: 1                # 1 mensaje a la vez por consumidor
+        retry:
+          enabled: true            # Reintentos automáticos con exponential backoff
+          initial-interval: 1000   # 1 segundo entre primer reintento
+          max-interval: 10000      # Máximo 10 segundos entre reintentos
+          multiplier: 2.0          # Duplicar intervalo en cada reintento
+          max-attempts: 3          # 3 intentos antes de enviar a DLQ
 
 server:
   port: 8080
