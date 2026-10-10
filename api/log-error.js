@@ -12,18 +12,20 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
+    const nivel = (body.nivel || 'error').toLowerCase();
+    const routingKey = nivel === 'error' ? 'log.error' : 'log.info';
 
-    // Publicar log.error → llega a logs_queue Y a errors_only_queue (doble consumo)
-    await publishToCloudAMQP('log.error', {
-      nivel: 'error',
-      mensaje: body.mensaje || 'Error crítico simulado en S.M.A.R.T.',
+    // Publicar log → si es error llega a errors_only_queue, si es info llega a logs_queue
+    await publishToCloudAMQP(routingKey, {
+      nivel,
+      mensaje: body.mensaje || 'Evento registrado en S.M.A.R.T.',
       timestamp: new Date().toISOString()
     });
 
     return res.status(200).json({
       ok: true,
-      mensaje: '🚨 Error crítico publicado. Llega a logs_queue + errors_only_queue.',
-      patron: '🟢 Topic Exchange — Doble consumo con wildcard'
+      mensaje: `Log (${nivel}) publicado con routing key ${routingKey}.`,
+      patron: '🟢 Topic Exchange — Enrutamiento dinámico por nivel'
     });
   } catch (error) {
     console.error('[/api/log-error] Error:', error);
