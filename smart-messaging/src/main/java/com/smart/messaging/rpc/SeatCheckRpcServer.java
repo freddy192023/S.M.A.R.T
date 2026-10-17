@@ -22,43 +22,51 @@ import org.springframework.stereotype.Service;
  * IMPORTANTE: En producción, reemplazar la simulación por una
  * consulta real a Supabase via JDBC o API REST.
  */
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+
 @Service
 public class SeatCheckRpcServer {
 
     @RabbitListener(queues = RpcConfig.SEAT_CHECK_QUEUE)
-    public String verificarAsiento(String peticion) {
+    public String verificarAsiento(Message message, Channel channel, 
+            @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws java.io.IOException {
+        String peticion = new String(message.getBody());
         System.out.println("[RPC-SERVER] 🔍 Petición recibida: " + peticion);
 
-        // Formato esperado: "viajeId:asientoNumero"
-        String[] partes = peticion.split(":");
-        if (partes.length < 2) {
-            System.out.println("[RPC-SERVER] ⚠ Formato de petición inválido: " + peticion);
-            return "ERROR:formato_invalido";
-        }
-
-        String viajeId = partes[0];
-        String asiento = partes[1];
-
-        // ── SIMULACIÓN ─────────────────────────────────────────────────────────
-        // Asientos PARES → disponibles | Asientos IMPARES → ocupados
-        // ── PRODUCCIÓN: reemplazar por consulta a Supabase ────────────────────
-        //
-        // Ejemplo con Supabase REST API:
-        // boolean disponible = supabaseClient.checkSeatAvailability(viajeId, Integer.parseInt(asiento));
-        //
-        boolean disponible;
         try {
-            disponible = Integer.parseInt(asiento) % 2 == 0;
-        } catch (NumberFormatException e) {
-            System.out.println("[RPC-SERVER] ⚠ Número de asiento inválido: " + asiento);
-            return "ERROR:asiento_invalido";
+            // Formato esperado: "viajeId:asientoNumero"
+            String[] partes = peticion.split(":");
+            if (partes.length < 2) {
+                System.out.println("[RPC-SERVER] ⚠ Formato de petición inválido: " + peticion);
+                channel.basicAck(deliveryTag, false);
+                return "ERROR:formato_invalido";
+            }
+
+            String viajeId = partes[0];
+            String asiento = partes[1];
+
+            boolean disponible;
+            try {
+                disponible = Integer.parseInt(asiento) % 2 == 0;
+            } catch (NumberFormatException e) {
+                System.out.println("[RPC-SERVER] ⚠ Número de asiento inválido: " + asiento);
+                channel.basicAck(deliveryTag, false);
+                return "ERROR:asiento_invalido";
+            }
+
+            String respuesta = disponible
+                    ? "DISPONIBLE:" + viajeId + ":" + asiento
+                    : "OCUPADO:"    + viajeId + ":" + asiento;
+
+            System.out.println("[RPC-SERVER] 📤 Respondiendo: " + respuesta);
+            channel.basicAck(deliveryTag, false);
+            return respuesta;
+        } catch (Exception e) {
+            channel.basicNack(deliveryTag, false, false);
+            return "ERROR:interno";
         }
-
-        String respuesta = disponible
-                ? "DISPONIBLE:" + viajeId + ":" + asiento
-                : "OCUPADO:"    + viajeId + ":" + asiento;
-
-        System.out.println("[RPC-SERVER] 📤 Respondiendo: " + respuesta);
-        return respuesta;
     }
 }
