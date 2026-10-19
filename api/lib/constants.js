@@ -14,6 +14,7 @@ export const RABBIT_CONFIG = {
   QUEUES: {
     RESERVA_CREADA: 'reserva_creada_queue',
     SMART_EMAIL: 'smart.reserva.email',
+    SMART_PDF: 'smart.reserva.pdf',
     RESERVA_CANCELADA: 'reserva_cancelada_queue',
     VIAJE_PROGRAMADO: 'viaje_programado_queue',
     LOGS: 'logs_queue',

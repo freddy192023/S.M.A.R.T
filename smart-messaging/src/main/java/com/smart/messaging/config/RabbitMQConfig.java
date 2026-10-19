@@ -40,6 +40,7 @@ public class RabbitMQConfig {
     // ── Nombres de colas ──────────────────────────────────────────────────────
     public static final String RESERVA_CREADA_Q   = "reserva_creada_queue";
     public static final String SMART_EMAIL_Q      = "smart.reserva.email";
+    public static final String SMART_PDF_Q        = "smart.reserva.pdf";
     public static final String RESERVA_CANCEL_Q   = "reserva_cancelada_queue";
     public static final String VIAJE_PROGRAMADO_Q = "viaje_programado_queue";
     public static final String LOGS_Q             = "logs_queue";
@@ -100,6 +101,15 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue smartPdfQueue() {
+        return QueueBuilder.durable(SMART_PDF_Q)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", "dead.letter")
+                .withArgument("x-message-ttl", MESSAGE_TTL)
+                .build();
+    }
+
+    @Bean
     public Queue reservaCancelQueue() {
         return QueueBuilder.durable(RESERVA_CANCEL_Q)
                 .withArgument("x-dead-letter-exchange", DLX)
@@ -145,6 +155,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindSmartEmail(TopicExchange smartExchange, Queue smartEmailQueue) {
         return BindingBuilder.bind(smartEmailQueue).to(smartExchange).with("reserva.creada");
+    }
+
+    @Bean
+    public Binding bindSmartPdf(TopicExchange smartExchange, Queue smartPdfQueue) {
+        return BindingBuilder.bind(smartPdfQueue).to(smartExchange).with("reserva.creada");
     }
 
     @Bean

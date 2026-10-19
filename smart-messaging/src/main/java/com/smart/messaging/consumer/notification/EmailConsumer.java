@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailConsumer {
 
-    @RabbitListener(queues = {RabbitMQConfig.RESERVA_CREADA_Q, RabbitMQConfig.SMART_EMAIL_Q})
+    @RabbitListener(queues = RabbitMQConfig.SMART_EMAIL_Q)
     public void enviarEmailConfirmacion(Message message, Channel channel,
             @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws java.io.IOException {
         String reservaJson = new String(message.getBody());

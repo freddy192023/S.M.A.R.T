@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PDFConsumer {
 
-    @RabbitListener(queues = RabbitMQConfig.RESERVA_CREADA_Q)
+    @RabbitListener(queues = RabbitMQConfig.SMART_PDF_Q)
     public void generarComprobantePDF(Message message, Channel channel,
             @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws java.io.IOException {
         String reservaJson = new String(message.getBody());
