@@ -27,7 +27,7 @@
 - [Sistema de Asientos](#-sistema-de-asientos-nuevo)
 - [Sistema de Reservas](#-sistema-de-reservas-nuevo)
 - [Arquitectura del Software](#️-arquitectura-del-software)
-- [🐇 Módulo de Mensajería RabbitMQ](#-módulo-de-mensajería-rabbitmq-nuevo)
+- [Módulo de Mensajería RabbitMQ](#-módulo-de-mensajería-rabbitmq-nuevo)
 - [Stack Tecnológico](#-stack-tecnológico)
 - [Base de Datos](#️-base-de-datos)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
@@ -39,7 +39,7 @@
 
 ---
 
-## 🧭 Descripción General
+##  Descripción General
 
 **S.M.A.R.T.** es una plataforma web destinada a la gestión integral de una empresa de transporte privado de pasajeros.
 
