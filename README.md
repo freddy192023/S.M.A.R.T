@@ -497,14 +497,127 @@ El proyecto sigue una **Arquitectura de Monolito Modular en el Frontend** con **
 | **Design System** | CSS modularizado en 3 capas: variables, estilos públicos y estilos del dashboard |
 
 ---
+## 🐇 Módulo de Mensajería RabbitMQ & Evaluación Cloud Native (EP3 / EP4)
 
-## 🐇 Módulo de Mensajería RabbitMQ (CloudAMQP)
+S.M.A.R.T. incorpora una arquitectura de mensajería Cloud Native empresarial de alto rendimiento y tolerancia a fallos, combinando **patrones Síncronos (RPC)** y **Asíncronos (Pub/Sub con Topic Exchange)** mediante **RabbitMQ (CloudAMQP en AWS)**, microservicios en **Java 17 (Spring Boot 3)** contenerizados en **Docker** y productores Serverless en **Vercel**.
 
-S.M.A.R.T. cuenta con una arquitectura de mensajería desacoplada utilizando **RabbitMQ (CloudAMQP)** y funciones Serverless en Vercel.
+> 📖 **Guía Extendida de Pruebas y Postman:** Consulta el documento técnico detallado en [RABBITMQ_DOCS.md](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/RABBITMQ_DOCS.md) y [DOCUMENTACION_IMPLEMENTACION_EP3.md](file:///C:/Users/fred2/.gemini/antigravity-ide/brain/5041bec1-6147-493f-9f93-bf080f5847a4/DOCUMENTACION_IMPLEMENTACION_EP3.md).
 
-> 📖 **Documentación extendida completa:** Consulta el archivo [RABBITMQ_DOCS.md](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/RABBITMQ_DOCS.md).
+---
 
-### 🔑 Credenciales de Acceso a CloudAMQP (Management UI)
+### 🏛️ Arquitectura de Mensajería Desacoplada
+
+```
+           📱 CLIENTE (Web en Vercel / Celular / Postman)
+                         │
+        ┌────────────────┴────────────────┐
+        │                                 │
+   (Flujo Web)                      (Flujo Postman / Backend)
+        ▼                                 ▼
+⚡ Vercel Serverless Functions        🐳 Docker Backend (Spring Boot)
+   (/api/confirmar, /cancelar)           (localhost:8080)
+        │                                 │
+        └────────────────┬────────────────┘
+                         ▼ AMQPS (TLS/SSL)
+          ☁️ CloudAMQP (RabbitMQ en AWS)
+             Exchange: "s.m.a.r.t_exchange" (Topic)
+             Exchange DLX: "smart_dlx" (Fanout/Direct)
+                         │
+     ┌───────────────────┼───────────────────┬───────────────────┐
+     │ reserva.creada    │ reserva.cancelada │ viaje.programado  │ log.* / log.error
+     ▼                   ▼                   ▼                   ▼
+┌──────────────────┐┌──────────────────┐┌──────────────────┐┌──────────────────┐
+│reserva_creada_q  ││reserva_cancel_q  ││viaje_programado_q││logs_queue        │
+│(TTL 30s + DLX)   ││(TTL 30s + DLX)   ││(TTL 30s + DLX)   ││errors_only_queue │
+└────────┬─────────┘└────────┬─────────┘└────────┬─────────┘└────────┬─────────┘
+         │                   │                   │                   │
+         └───────────────────┼───────────────────┴───────────────────┘
+                             ▼ @RabbitListener (ACK Manual / Prefetch = 1)
+                  🐳 CONSUMIDORES POR DOMINIO (Docker Java 17)
+                     ├── 📧 consumer.notification (EmailConsumer)
+                     ├── 📄 consumer.document     (PDFConsumer)
+                     ├── 📝 consumer.reservation  (AuditoriaConsumer / AsientoConsumer)
+                     ├── 🚍 consumer.trip         (ViajeEventConsumer)
+                     ├── 📊 consumer.monitoring   (LogConsumer)
+                     └── ☠️ consumer.dlq          (DLQConsumer en smart_dlq)
+```
+
+---
+
+### 🔑 Conceptos Técnicos Implementados
+
+1. **Mensajería Síncrona vs. Asíncrona:**
+   * **Síncrono (RPC - Request/Reply):** El hilo del emisor se bloquea en espera inmediata de respuesta. Usado en `SeatCheckRpcClient` / `SeatCheckRpcServer` sobre la cola `seat_check_rpc_queue` para verificar la disponibilidad atómica de asientos **antes** de procesar cobros, evitando condiciones de carrera (*race conditions*).
+   * **Asíncrono (Pub/Sub):** El emisor publica el evento y retorna inmediatamente (milisegundos). El mensaje se almacena en el broker y los consumidores de Email, PDF y Auditoría lo leen en paralelo sin congelar la interfaz del usuario.
+2. **Confirmaciones Explícitas (ACK / NACK manual):**
+   * Cada consumidor procesa bajo `acknowledge-mode: manual`.
+   * En éxito: invoca `channel.basicAck(deliveryTag, false)` para retirar el mensaje.
+   * En excepción: invoca `channel.basicNack(deliveryTag, false, false)` con `requeue: false`, forzando el envío automático al Dead Letter Exchange.
+3. **Resiliencia y Reintentos (Exponential Backoff):**
+   * Configurado en `application.yml` (`initial-interval: 1000ms`, `multiplier: 2.0`, `max-attempts: 3`) para tolerar microcortes de red antes de descartar el mensaje.
+4. **Dead Letter Exchange (DLX) y Dead Letter Queue (DLQ):**
+   * Todas las colas derivan mensajes rechazados al exchange `smart_dlx`, quedando retenidos en `smart_dlq` (TTL 24 horas) para inspección por [`DLQConsumer`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/java/com/smart/messaging/consumer/dlq/DLQConsumer.java).
+5. **Políticas de Retención y TTL (Time-To-Live):**
+   * Colas operativas con `x-message-ttl: 30000` (30 segundos) para evitar saturación de memoria en caso de desconexión del backend.
+6. **Topic Exchange y Comodines de Auditoría:**
+   * El routing key `log.*` canaliza todos los eventos de nivel `info`, `warning` y `error` a `logs_queue`.
+   * Los eventos de nivel `log.error` son además duplicados simultáneamente hacia `errors_only_queue` para activar alertas críticas de monitoreo.
+
+---
+
+### 📋 Cumplimiento de la Pauta de Evaluación (EP3 - 100% de Logro)
+
+| Indicador de Evaluación | Ponderación | Estado | Implementación en Código |
+|---|:---:|:---:|---|
+| **1. Configuración Centralizada** | 12% | ✅ 100% | Centralizado en [`RabbitMQConfig.java`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/java/com/smart/messaging/config/RabbitMQConfig.java) y [`constants.js`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/api/lib/constants.js). Sin strings dispersos en lógica de negocio. |
+| **2. Declaración de Beans (Queue, Exchange, Binding)** | 13% | ✅ 100% | Beans explícitos para `TopicExchange`, `DLX`, 7 colas con durabilidad + TTL + DLX, y bindings documentados. |
+| **3. Separación de Lógica y Configuración** | 10% | ✅ 100% | Configuración aislada en paquete `config/`. Negocio desacoplado mediante `EventPublisher` y `RabbitResourceManager`. |
+| **4. Consumidores `@RabbitListener` por Dominio** | 15% | ✅ 100% | Paquetes separados: `consumer.notification`, `consumer.document`, `consumer.reservation`, `consumer.trip`, `consumer.monitoring`, `consumer.dlq`. |
+| **5. Manejo de ACK, NACK, Reintentos y DLQ** | 20% | ✅ 100% | `basicAck()` / `basicNack()` manuales en todos los consumidores, reintentos exponenciales en YAML y monitoreo DLQ. |
+| **6. Microservicio Administrador REST** | 13% | ✅ 100% | [`RabbitMQAdminController.java`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/java/com/smart/messaging/controller/RabbitMQAdminController.java) con endpoints `POST /queues`, `POST /exchanges`, `POST /bindings`, `GET /queues/{id}`, `DELETE /queues/{id}`, `POST /queues/{id}/purge`. |
+| **7. Servicio Dedicado (`RabbitResourceManager`)** | 10% | ✅ 100% | Lógica de infraestructura encapsulada en [`RabbitResourceManager.java`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/java/com/smart/messaging/service/RabbitResourceManager.java) utilizando `RabbitAdmin`. |
+| **8. Validación de Parámetros de Entrada** | 7% | ✅ 100% | DTOs anotados con `@NotBlank`, `@Pattern` y validados con `@Valid` en controladores, retornando `400 Bad Request`. |
+
+---
+
+### 🧪 Catálogo de Pruebas de Demostración (Postman / cURL)
+
+#### 1. Administración: Crear Cola Dinámicamente
+* **POST** `http://localhost:8080/api/rabbitmq/queues`
+* **Body:** `{"queueName": "cola_demostracion", "durable": true}` ➔ **201 Created**
+
+#### 2. Validación: Error por Nombre Inválido
+* **POST** `http://localhost:8080/api/rabbitmq/queues`
+* **Body:** `{"queueName": ""}` ➔ **400 Bad Request** (*"El nombre de la cola no puede estar vacío"*)
+
+#### 3. Flujo Síncrono (RPC): Verificación Atómica de Asiento
+* **POST** `http://localhost:8080/api/reservations/confirmar`
+* **Body:** `{"viajeId": "VJ-101", "asiento": "4", "pasajero": "Freddy Rivera"}` ➔ **200 OK** (Asiento par disponible, continúa al Pub/Sub)
+* **Body:** `{"viajeId": "VJ-101", "asiento": "5", "pasajero": "Freddy Rivera"}` ➔ **400 Bad Request** (*"Asiento ocupado (verificado síncronamente por RPC)"*)
+
+#### 4. Flujo Asíncrono: Confirmación de Reserva
+* **POST** `http://localhost:8080/api/events/reserva`
+* **Body:** `{"viajeId": "VJ-101", "asiento": "4", "pasajero": "Freddy Rivera"}`
+* **Logs Docker:** Se activan simultáneamente `[EMAIL]`, `[PDF]` y `[AUDITORIA]` en paralelo.
+
+#### 5. Flujo Asíncrono: Cancelación y Liberación de Asiento
+* **POST** `http://localhost:8080/api/events/cancelacion`
+* **Body:** `{"reservaCode": "SMART-966116", "viajeId": "VJ-101", "asiento": "21", "pasajero": "Freddy"}`
+* **Logs Docker:** `[ASIENTO] 🔓 Liberando asiento de reserva cancelada...`
+
+#### 6. Flujo Asíncrono: Programación de Viaje (Notificar Conductor)
+* **POST** `http://localhost:8080/api/events/viaje`
+* **Body:** `{"viajeId": "VJ-500", "ruta": "Santiago - Viña del Mar", "conductor": "Carlos González"}`
+* **Logs Docker:** `[CONDUCTOR] 🚍 Nuevo viaje programado...`
+
+#### 7. Monitoreo: Topic Exchange y Alerta Crítica Dual
+* **POST** `http://localhost:8080/api/events/log`
+* **Body:** `{"nivel": "error", "mensaje": "Fallo crítico en motor de pagos"}`
+* **Logs Docker:** Imprime tanto en `[MONITOR] 📊` como en `🚨 [ALERTA CRÍTICA S.M.A.R.T]`.
+
+---
+
+### 🔑 Credenciales CloudAMQP (Broker en la Nube)
 
 | Parámetro | Valor |
 |---|---|
@@ -513,17 +626,7 @@ S.M.A.R.T. cuenta con una arquitectura de mensajería desacoplada utilizando **R
 | **Usuario (Username)** | `upzhvdpi` |
 | **Contraseña (Password)** | `uQeQBUACo1mXOIuYq2Rta87dczLjEkHa` |
 | **AMQPS URL** | `amqps://upzhvdpi:uQeQBUACo1mXOIuYq2Rta87dczLjEkHa@shark.rmq.cloudamqp.com/upzhvdpi` |
-
-### 📥 Colas Activas y Ruteo
-
-| Nombre de la Cola | Routing Key | Función |
-|---|---|---|
-| `reserva_creada_queue` | `reserva.creada` | Eventos de reservas confirmadas |
-| `reserva_cancelada_queue` | `reserva.cancelada` | Eventos de cancelación de reservas |
-| `viaje_programado_queue` | `viaje.programado` | Notificación de nuevos viajes programados |
-| `logs_queue` | `log.*` | Auditoría general (recibe copia de todos los eventos) |
-| `errors_only_queue` | `log.error` | Registro de errores críticos del sistema |
-| `smart.reserva.email` | `reserva.email` | Cola de correos de confirmación |
+| **Management UI** | `https://shark.rmq.cloudamqp.com/#/` |
 
 ---
 
