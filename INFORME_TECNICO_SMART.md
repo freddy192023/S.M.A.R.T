@@ -61,18 +61,18 @@ El Documento 3.3.3 establece que un sistema de eventos resiliente no solo debe a
   * Todos los consumidores extraen el header `correlationId` y lo posicionan en el contexto MDC antes de procesar el evento.
   * El archivo [`application.yml`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/resources/application.yml) define el patrón de logs:  
     `%d{yyyy-MM-dd HH:mm:ss} [%thread] [cid:%X{correlationId}] %-5level %logger{36} - %msg%n`. Esto permite correlacionar exactamente la emisión, tránsito y consumo (o desvío a DLT) del mensaje.
-* **Idempotencia Persistente en Base de Datos (`processed_messages`):**
-  * Para no depender de memorias volátiles que se pierden al reiniciar el microservicio, se creó [`IdempotencyService.java`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/java/com/smart/messaging/service/IdempotencyService.java) respaldado por `spring-boot-starter-jdbc` con una tabla relacional indexada:
+* **Idempotencia Persistente en Base de Datos Cloud (Supabase PostgreSQL):**
+  * Para no depender de memorias volátiles que se pierden al reiniciar el microservicio, se creó [`IdempotencyService.java`](file:///c:/Users/fred2/Downloads/S.M.A.R.T%20%E2%80%94%20Smart%20Mobility%20&%20Administration%20Resource%20Technology/smart-messaging/src/main/java/com/smart/messaging/service/IdempotencyService.java) conectado vía JDBC (`org.postgresql.Driver`) directamente a nuestra **Base de Datos Cloud PostgreSQL en Supabase** (`aws-0-us-west-2.pooler.supabase.com:5432`):
     ```sql
     CREATE TABLE IF NOT EXISTS processed_messages (
         message_id VARCHAR(100) NOT NULL,
         topic VARCHAR(100) NOT NULL,
         consumer_group VARCHAR(100) NOT NULL,
-        processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (message_id, topic, consumer_group)
+        processed_at TIMESTAMP NOT NULL,
+        PRIMARY KEY (message_id)
     );
     ```
-  * Si Kafka reenvía un mensaje por reintento o commit no confirmado, el método `isDuplicateOrMarkProcessed()` detecta la colisión de clave primaria y descarta la duplicidad de forma segura.
+  * Si Kafka reenvía un mensaje por reintento o commit no confirmado, el método `esMensajeDuplicado()` detecta la colisión de clave primaria (`DuplicateKeyException`) y descarta la duplicidad de forma segura y persistente entre reinicios.
 * **Deserializador Seguro (`ErrorHandlingDeserializer`):**
   * Configurado en clave y valor en `application.yml` y `KafkaConfig.java`, evitando que envenenamiento de mensajes (poison pills) con JSON malformado bloquee el offset del consumidor.
 * **Reintentos y Dead Letter Topic (DLT):**
@@ -128,7 +128,7 @@ Para garantizar que el docente evaluador pueda interactuar con la infraestructur
 | **7** | **Parámetros de Tópicos:** Definición de particiones, replicación, retención temporal y políticas de limpieza. | 12% | Auto-declaración en `KafkaConfig.java` diferenciada por dominio (viajes: 3 part, 7d ret; reservas: 3 part, 7d ret; telemetría: 5 part, 24h ret). Creación dinámica vía REST aceptando `retention.ms` y `cleanup.policy`. | ✅ **100% CUMPLIDO** |
 | **8** | **Consumer Groups y Resiliencia:** Balanceo de carga y procesamiento resiliente entre instancias o hilos consumidores. | 12% | Grupos dedicados (`smart-viajes-group`, `smart-reservas-group`, `smart-telemetria-group`, `smart-dlt-group`), concurrencia = 3 hilos en contenedor listener y particiones distribuidas equitativamente. | ✅ **100% CUMPLIDO** |
 | **9** | **Herramientas de Administración (API / Scripts):** Microservicio administrador o scripts para inspección y gestión de tópicos y grupos. | 6% | Doble cumplimiento: API REST administrativa completa (`KafkaAdminController`) + Scripts de infraestructura multiplataforma (`scripts/manage-kafka.ps1` y `scripts/manage-kafka.sh`). | ✅ **100% CUMPLIDO** |
-| **TOTAL** | **Puntaje Global Pauta EP5_DSY1107** | **100%** | **Todos los indicadores cubiertos con nivel de producción y cero deuda técnica.** | 🏆 **7.0 (NOTA MÁXIMA)** |
+| **TOTAL** | **Puntaje Global Pauta EP5_DSY1107** | **100%** | **Todos los indicadores cubiertos con nivel de producción.** | **Pendiente de validación por el docente según niveles de logro de la pauta.** |
 
 ---
 

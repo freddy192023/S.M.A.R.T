@@ -104,3 +104,4 @@ case "$ACTION" in
     echo "  consume-test [topico]                   Lee mensajes del tópico"
     ;;
 esac
+

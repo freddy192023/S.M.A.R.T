@@ -2,16 +2,12 @@ spring:
   application:
     name: smart-messaging
 
-  # ── Base de Datos para Idempotencia Persistente y Auditoría (Doc 3.3.3 & Bloque 2.2) ──
+  # ── Base de Datos Cloud (Supabase PostgreSQL) para Idempotencia y Auditoría (Doc 3.3.3 & Bloque 2.2) ──
   datasource:
-    url: jdbc:h2:file:./data/smart_db;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE;MODE=PostgreSQL
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ""
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: update
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://aws-0-us-west-2.pooler.supabase.com:5432/postgres?sslmode=require}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:postgres.tjemmhsqfltplgvglfmy}
+    password: ${SPRING_DATASOURCE_PASSWORD:6Fh3ItJOpov8yAqT}
 
   # ── Configuración RabbitMQ ──────────────────────────────────────────────────
   rabbitmq:
