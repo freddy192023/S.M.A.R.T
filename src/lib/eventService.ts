@@ -18,6 +18,8 @@
  *   Supabase no se interrumpe.
  */
 
+import { supabase } from './supabaseClient';
+
 const MESSAGING_API = '/api';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -41,9 +43,17 @@ export interface ConfirmarReservaResult {
 
 async function post(endpoint: string, body: unknown): Promise<Response | null> {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    // Inyección de JWT desde IDaaS (Bloque 6.2)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
     return await fetch(`${MESSAGING_API}${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     });
   } catch {
@@ -51,6 +61,26 @@ async function post(endpoint: string, body: unknown): Promise<Response | null> {
     console.warn(`[EventService] Módulo de mensajería no disponible (${endpoint})`);
     return null;
   }
+}
+
+// ─── ⚡ MÉTODOS KAFKA (Bloque 4.3 y 6.2) ────────────────────────────────────────
+
+/** Publica evento de viaje en Apache Kafka (smart.viajes) con autenticación JWT */
+export async function publicarKafkaViaje(evento: unknown): Promise<void> {
+  const res = await post('/kafka/events/viaje', evento);
+  if (res?.ok) console.log('[EventService] ✅ Evento Kafka viaje publicado');
+}
+
+/** Publica evento de reserva en Apache Kafka (smart.reservas) con autenticación JWT */
+export async function publicarKafkaReserva(evento: unknown): Promise<void> {
+  const res = await post('/kafka/events/reserva', evento);
+  if (res?.ok) console.log('[EventService] ✅ Evento Kafka reserva publicado');
+}
+
+/** Envía telemetría de bus en Apache Kafka (smart.telemetria) con autenticación JWT */
+export async function publicarKafkaTelemetria(evento: unknown): Promise<void> {
+  const res = await post('/kafka/events/telemetria', evento);
+  if (res?.ok) console.log('[EventService] 📡 Evento Kafka telemetría enviado');
 }
 
 // ─── 🟢 MÉTODOS ASÍNCRONOS ────────────────────────────────────────────────────

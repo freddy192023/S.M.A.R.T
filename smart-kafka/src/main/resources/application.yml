@@ -1,0 +1,13 @@
+﻿server:
+  port: 8081
+
+spring:
+  application:
+    name: kafka-streams-lab
+  kafka:
+    bootstrap-servers: localhost:29092
+    streams:
+      application-id: duoc-filtro-stream
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde

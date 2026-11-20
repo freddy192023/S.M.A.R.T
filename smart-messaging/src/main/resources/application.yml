@@ -2,6 +2,18 @@ spring:
   application:
     name: smart-messaging
 
+  # ── Base de Datos para Idempotencia Persistente y Auditoría (Doc 3.3.3 & Bloque 2.2) ──
+  datasource:
+    url: jdbc:h2:file:./data/smart_db;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+
+  # ── Configuración RabbitMQ ──────────────────────────────────────────────────
   rabbitmq:
     host: shark.rmq.cloudamqp.com
     port: 5671
@@ -11,7 +23,6 @@ spring:
     ssl:
       enabled: true
 
-    # Reintentos automáticos si RabbitMQ no está disponible al arrancar
     template:
       retry:
         enabled: true
@@ -19,22 +30,55 @@ spring:
         max-interval: 30000
         multiplier: 2.0
 
-    # Configuración del listener (consumidores)
     listener:
       simple:
-        acknowledge-mode: manual   # manual-ack para mayor control y DLX
-        prefetch: 1                # 1 mensaje a la vez por consumidor
+        acknowledge-mode: manual
+        prefetch: 1
         retry:
-          enabled: true            # Reintentos automáticos con exponential backoff
-          initial-interval: 1000   # 1 segundo entre primer reintento
-          max-interval: 10000      # Máximo 10 segundos entre reintentos
-          multiplier: 2.0          # Duplicar intervalo en cada reintento
-          max-attempts: 3          # 3 intentos antes de enviar a DLQ
+          enabled: true
+          initial-interval: 1000
+          max-interval: 10000
+          multiplier: 2.0
+          max-attempts: 3
+
+  # ── Configuración Apache Kafka (Bloques 4.1 y 4.6) ───────────────────────────
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    # Productor: Serialización String para claves y JSON para objetos DTO
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        spring.json.add.type.headers: true
+
+    # Consumidor: Deserialización con ErrorHandlingDeserializer y control de offsets
+    consumer:
+      group-id: smart-messaging-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "com.smart.messaging.dto,*"
+
+    # Listener: Control de entrega y tolerancia a tópicos ausentes
+    listener:
+      ack-mode: record
+      missing-topics-fatal: false
 
 server:
   port: 8080
 
+# ── Logging con Correlation ID y MDC (Documento 3.3.3) ────────────────────────
 logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) [CorrId: %clr(%X{correlationId:-NONE}){cyan}] %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n"
   level:
     com.smart.messaging: DEBUG
     org.springframework.amqp: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN

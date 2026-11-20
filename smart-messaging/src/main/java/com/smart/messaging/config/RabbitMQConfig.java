@@ -1,4 +1,4 @@
-package com.smart.messaging.config;
+ package com.smart.messaging.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;

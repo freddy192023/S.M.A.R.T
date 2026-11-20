@@ -9,6 +9,7 @@ import { VoucherModal } from '../components/VoucherModal';
 import { PassengerManifestModal } from '../components/PassengerManifestModal';
 import { OperationalGuideModal } from '../components/OperationalGuideModal';
 import { useNotification } from '../context/NotificationContext';
+import { publicarKafkaTelemetria } from '../lib/eventService';
 import type { Reservation } from '../types';
 
 interface DashboardProps {
@@ -40,6 +41,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
   const [manifestTrip, setManifestTrip] = useState<any | null>(null);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [telemetrySending, setTelemetrySending] = useState(false);
+
+  const handleEmitTelemetry = async () => {
+    setTelemetrySending(true);
+    try {
+      const speed = Math.floor(Math.random() * 45) + 70; // 70 a 115 km/h
+      const alerta = speed > 100 ? 'EXCESO_VELOCIDAD' : 'NORMAL';
+      await publicarKafkaTelemetria({
+        busId: 'BUS-04',
+        viajeId: 'V-101',
+        latitud: -33.4489,
+        longitud: -70.6693,
+        velocidadKmh: speed,
+        nivelCombustible: 88.5,
+        alerta
+      });
+      showNotification(
+        'Telemetría Kafka Emitida',
+        `Evento transmitido a smart.telemetria | Velocidad: ${speed} km/h (${alerta})`,
+        speed > 100 ? 'warning' : 'success'
+      );
+    } catch {
+      showNotification('Aviso', 'Error al transmitir telemetría a Kafka', 'info');
+    } finally {
+      setTelemetrySending(false);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -218,6 +246,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
           </div>
         </div>
       )}
+
+      {/* Widget de Telemetría Kafka en Tiempo Real */}
+      <div className="content-card" style={{
+        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%)',
+        border: '1px solid rgba(0, 210, 196, 0.3)',
+        padding: '1.2rem 1.6rem',
+        marginBottom: '1.8rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span style={{ fontSize: '2rem' }}>📡</span>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#fff' }}>
+              Streaming IoT Apache Kafka — Flota en Ruta
+            </h4>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Tópico: <code>smart.telemetria</code> | Broker: <code>localhost:9092</code> | Kafka-UI: <code>:8085</code>
+            </p>
+          </div>
+        </div>
+        <button
+          className="btn btn-secondary"
+          onClick={handleEmitTelemetry}
+          disabled={telemetrySending}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}
+        >
+          {telemetrySending ? 'Transmitiendo...' : '🚀 Emitir Telemetría a Kafka'}
+        </button>
+      </div>
 
       {/* Grid de Estadísticas */}
       <div className="stats-grid">

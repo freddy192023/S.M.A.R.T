@@ -7,10 +7,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node / Frontend
 node_modules
 dist
 dist-ssr
 *.local
+
+# Java / Maven (Backend)
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+.m2/
+.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/maven-wrapper.jar
 
 # Editor directories and files
 .vscode/*
