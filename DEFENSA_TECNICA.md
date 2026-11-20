@@ -108,5 +108,13 @@ A continuación se detallan las respuestas precisas para las preguntas que el do
      ```
    * Mostrar en la terminal de `smart-messaging` los 2 reintentos inmediatos (`[KAFKA RETRY] Intento #1`, `Intento #2`) y el posterior desvío a `smart.viajes.DLT`.
    * Mostrar en Kafka-UI el mensaje capturado en `smart.viajes.DLT` con su encabezado `kafka_dlt-original-topic`.
-5. **Demostrar Idempotencia:**
-   * Mostrar en los logs cómo un mensaje retransmitido es marcado como `⚠️ [IDEMPOTENCIA] Evento DUPLICADO detectado`.
+5. **Demostrar Idempotencia en Vivo (Documento 3.3.3):**
+   * Ejecutar en PowerShell:
+     ```powershell
+     Invoke-RestMethod -Uri "http://localhost:8080/api/kafka/events/publicar-duplicado" -Method POST
+     ```
+   * La respuesta confirmará el envío simultáneo de 2 copias con el mismo `eventoId` a `smart.viajes`.
+   * En la terminal de `smart-messaging` se observará:
+     - 1er mensaje: procesado exitosamente por `ViajeKafkaConsumer` y registrado en la tabla `processed_messages` en Supabase PostgreSQL.
+     - 2do mensaje: detectado de forma inmediata por `IdempotencyService` arrojando:  
+       `⚠️ [IDEMPOTENCIA PERSISTENTE] Mensaje descartado: El evento 'DEMO-DUP-...' ya fue procesado previamente en el tópico 'smart.viajes' por el grupo 'smart-viajes-group'` y omitiendo la ejecución de negocio.

@@ -39,10 +39,10 @@ public class IdempotencyService {
                 "  topic VARCHAR(100) NOT NULL," +
                 "  consumer_group VARCHAR(100) NOT NULL," +
                 "  processed_at TIMESTAMP NOT NULL," +
-                "  PRIMARY KEY (message_id)" +
+                "  PRIMARY KEY (message_id, topic, consumer_group)" +
                 ")"
             );
-            log.info("✅ [IDEMPOTENCIA] Tabla 'processed_messages' inicializada correctamente.");
+            log.info("✅ [IDEMPOTENCIA] Tabla 'processed_messages' inicializada correctamente en Supabase Cloud PostgreSQL.");
         } catch (Exception e) {
             log.error("❌ [IDEMPOTENCIA] Error al inicializar tabla processed_messages: {}", e.getMessage());
         }
@@ -68,10 +68,21 @@ public class IdempotencyService {
             );
             return inserted == 0;
         } catch (DuplicateKeyException e) {
-            log.warn("⚠️ [IDEMPOTENCIA PERSISTENTE] Mensaje descartado: El evento '{}' ya fue procesado previamente en el grupo '{}'.",
-                    messageId, consumerGroup);
+            log.warn("⚠️ [IDEMPOTENCIA PERSISTENTE] Mensaje descartado: El evento '{}' ya fue procesado previamente en el tópico '{}' por el grupo '{}'.",
+                    messageId, topic, consumerGroup);
             return true;
         } catch (Exception e) {
+            // Verificación secundaria por si la excepción no fue mapeada como DuplicateKeyException
+            try {
+                Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM processed_messages WHERE message_id = ? AND topic = ? AND consumer_group = ?",
+                    Integer.class, messageId, topic, consumerGroup
+                );
+                if (count != null && count > 0) {
+                    log.warn("⚠️ [IDEMPOTENCIA PERSISTENTE] Mensaje detectado como duplicado vía verificación SELECT: {}", messageId);
+                    return true;
+                }
+            } catch (Exception ignored) {}
             log.error("❌ [IDEMPOTENCIA] Error al verificar duplicidad en BD: {}", e.getMessage());
             return false;
         }

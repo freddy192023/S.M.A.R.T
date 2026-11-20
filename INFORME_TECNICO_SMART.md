@@ -190,6 +190,14 @@ cd smart-messaging
    .\scripts\manage-kafka.ps1 -Command consumer-groups
    .\scripts\manage-kafka.ps1 -Command list-topics
    ```
+5. **Demostración de Idempotencia en Vivo (Documento 3.3.3):**
+   * Disparar el endpoint de retransmisión duplicada:
+     ```powershell
+     Invoke-RestMethod -Uri "http://localhost:8080/api/kafka/events/publicar-duplicado" -Method POST
+     ```
+   * En la consola de `smart-messaging` se comprobará que el 1er mensaje es procesado con éxito, y el 2do mensaje es descartado automáticamente por `IdempotencyService` arrojando:  
+     `⚠️ [IDEMPOTENCIA PERSISTENTE] Mensaje descartado: El evento 'DEMO-DUP-...' ya fue procesado previamente en el tópico 'smart.viajes' por el grupo 'smart-viajes-group'`  
+     gracias a la constraint compuesta `(message_id, topic, consumer_group)` en Supabase Cloud PostgreSQL.
 
 ---
 
